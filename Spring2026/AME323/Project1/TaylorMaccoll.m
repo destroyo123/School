@@ -155,3 +155,8 @@ function delta = deltaFinder(M, beta, gamma)
     delta = 2*cotd(beta)*delta;
     delta = atand(delta);
 end
+
+%%Broad Steps Needed%%
+% 1. Assume is a wedge and get M2 and shock angle Beta (have functionsfor
+% them)
+% 2. 
