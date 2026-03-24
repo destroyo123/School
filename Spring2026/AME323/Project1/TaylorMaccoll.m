@@ -170,4 +170,5 @@ function[v_prime] = v_shock(Beta,v_after,delta)
     v_prime = v_after * cos(Beta-delta)
 end
 
+y1 = v_after;
 
