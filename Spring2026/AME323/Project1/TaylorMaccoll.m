@@ -1,7 +1,6 @@
 %% AME 323 - Gas Dynamics, Project 1: Solving the Taylor-Maccoll equations
-% (Text below the table of contents in the PDF generated when you hit
-% "publish")
-
+% Authors: Maren Kalberer, Etan Grant
+% Date: 3-27-26
 %% Description:
 %{
 So this program is gonna do XYZ
