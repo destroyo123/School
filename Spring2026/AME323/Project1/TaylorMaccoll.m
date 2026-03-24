@@ -37,10 +37,11 @@ M_inputs = [1.5, 2.0, 5.0];
 %% Setting Up the System of Equations
 % Setmks up the functions of θ, β, M, other crap (is this actually what we wanna do?)
 
+y1 = v/v_max;
+dydt(1) = y2;
+
 %% Solving the System of Equations
 % Solves the system and logs the results.
-
-y1 = v/v_max;
 
 %% Plotting
 % This is where the required plots are generated.
