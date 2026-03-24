@@ -1,17 +1,24 @@
 %% AME 323 - Gas Dynamics, Project 1: Solving the Taylor-Maccoll equations
-% Authors: Maren Kalberer, Etan Grant
-% Date: 3-27-26
+% *Authors:* Maren Kalberer, Etan Grant
+%%
+% *Date:* 3-27-26
 %% Description:
-%{
-So this program is gonna do XYZ
-by doing XYZ
+% So this program is gonna do XYZ 
+% by doing XYZ
+% 
+% 
+% and you can reference it like TaylorMaccol(parameter1, parameter2, etc...)
+% No idea if this is how they want it but probably.
+% 
+% Test Inline LaTeX format: $x^2+e^{\pi i}$ 
+% Test block of LaTeX: 
+% 
+% $$e^{\pi i} + 1 = 0$$
+% 
+% 
+% 
+% Bottom text lol <3
 
-
-and you can reference it like TaylorMaccol(parameter1, parameter2, etc...)
-No idea if this is how they want it but probably.
-
-Bottom text lol <3
-%}
 %% Housekeeping:
 % Requires having the Aerospace Toolbox installed for certain functions
 
@@ -47,65 +54,86 @@ M_inputs = [1.5, 2.0, 5.0];
 % Below is a set of functions used, based on lectures, NASA, and other
 % sources
 
-%{
-Prantl-Meyer Angle "nu"
+%%
+% *Prantl-Meyer Angle "nu"* 
+% 
+% *Inputs:* 
+%
+% * Local flow mach number 'M'
+% * Local flow ratio of specific heats 'gamma' (usually 1.4)
+% 
+% 
+% *Outputs:* 
+%
+%
+% * Prandtl-Meyer angle "nu", in degrees.
+%
 
-Inputs:
-    - Local flow mach number 'M'
-    - Local flow ratio of specific heats 'gamma' (usually 1.4)
-
-Outputs:
-    - Prandtl-Meyer angle "nu", in degrees.
-
-%}
 function prandtlMeyerAngle = nu(M, gamma)
     prandtlMeyerAngle = sqrt((gamma+1)/(gamma-1)) * atand(sqrt(((gamma-1)/(gamma+1))*(M.^2 - 1))) - atand(sqrt(M.^2 - 1));
 end
 
-%{
-Oblique Shock Pressure Ratio
-
-Inputs:
-    - Unperturbed Mach 'M' (often notated as 'M1' in diagrams)
-    - Local ratio of specific heats 'gamma'
-    - Oblique shock angle 'beta'
-
-Outputs:
-
-%}
+%%
+% *Oblique Shock Pressure Ratio* 
+% 
+% *Inputs:*
+%
+% * Unperturbed Mach 'M' (often notated as 'M1' in diagrams)
+% * Local ratio of specific heats 'gamma'
+% * Oblique shock angle 'beta'
+%
+% 
+% *Outputs:*
+%
+%
+% * Oblique-shock pressure ratio
+%
 function pressureRatio = obliquePR(M, gamma, beta)
     pressureRatio = 1 + ( (2*gamma)/( gamma+1 ) * ( (M^2) * (sind(beta)^2) - 1 ) );
 end
 
-%{
-Oblique shock resultant Mach
 
-Inputs:
-    - Unperturbed flow mach number 'M' (often notated as 'M1' in diagrams)
-    - Oblique shock angle 'beta' (in degrees)
-    - Wall/flow deflection angle 'delta' (in degrees)
-    - Flow ratio of specific heats 'gamma,' usually 1.4
-
-Outputs:
-    - Mach number after oblique shock & deflection, often notated as 'M2'
-%}
+%%
+% *Oblique shock resultant Mach*
+% 
+%
+% *Inputs:*
+%
+% * Unperturbed flow mach number 'M' (often notated as 'M1' in diagrams)
+% * Oblique shock angle 'beta' (in degrees)
+% * Wall/flow deflection angle 'delta' (in degrees)
+% * Flow ratio of specific heats 'gamma,' usually 1.4
+%
+% 
+%
+% *Outputs:*
+%
+% * Mach number after oblique shock & deflection, often notated as 'M2'
+%
+%
+%
 function mach = obliqueMach(M, beta, delta, gamma)
     mach = ((( (gamma-1)*(M^2)*((sind(beta))^2)+2 ) / ( 2*gamma * (M^2) * ((sind(beta))^2) - (gamma-1) ) ) ^0.5 ) / ( sind(beta-delta) ) ;
 end
 
-%{
-Find oblique shock angle "beta" instead of using the table.
-
-Inputs:
-    - Unperturbed mach "M" (AKA 'M1' in most notation),
-    - wall/flow deflection angle "theta" (often notated as "delta"),
-    - ratio of specific heats "gamma" of the flow,
-    - "n" specifies weak (n=0) or strong (n=1) shock case.
-    (Usually should be weak shock case.)
-
-Outputs:
-    - Oblique shock angle "beta" in degrees.
-%}
+%%
+% *Find oblique shock angle "beta" instead of using the table.*
+% 
+%
+% *Inputs:*
+%
+% * Unperturbed mach "M" (AKA 'M1' in most notation),
+% * wall/flow deflection angle "theta" (often notated as "delta"),
+% * ratio of specific heats "gamma" of the flow,
+% * "n" specifies weak (n=0) or strong (n=1) shock case. (Usually should be weak shock case.)
+%
+% 
+% *Outputs:*
+%
+% * Oblique shock angle "beta" in degrees.
+%
+%
+%
 function Beta=beta(M,theta,gamma,n)
     theta=theta*pi/180;             % convert to radians
     mu=asin(1/M);                   % Mach wave angle
@@ -125,31 +153,35 @@ function Beta=beta(M,theta,gamma,n)
     %}
 end
 
-%{
-Mach from prandtl-meyer angle (IN DEGREES)
+%%
+% *Mach from prandtl-meyer angle (IN DEGREES)*
+% 
+% *Inputs:*
+%
+%
+% * Ratio of specific heats "gamma" of flow, usually 1.4
+% * Prandtl-Meyer angle "nu" (degrees)
+% 
+% *Outputs:*
+%
+% * Local mach number "mach"
+%
 
-Inputs:
-    - Ratio of specific heats "gamma" of flow, usually 1.4
-    - Prandtl-Meyer angle "nu" (degrees)
-
-Outputs:
-    - Local mach number "mach"
-%}
 function mach = meyerMach(gamma, nu)
     mach = flowprandtlmeyer(gamma, nu, 'nu');
 end
 
-%{
-Find delta when given M and beta (degrees)
+%%
+% *Find delta when given M and beta (degrees)*
+% 
+% *Inputs:*
+% * Unperturbed Mach (AKA M1)
+% * oblique shock angle beta (degrees)
+% * Ratio of specific heats, 'gamma' of flow, usually 1.4
+% 
+% *Outputs:*
+% * Wall deflection angle 'delta' (in degrees)
 
-Inputs:
-    - Unperturbed Mach (AKA M1)
-    - oblique shock angle beta (degrees)
-    - Ratio of specific heats, 'gamma' of flow, usually 1.4
-
-Outputs:
-    - Wall deflection angle 'delta' (in degrees)
-%}
 function delta = deltaFinder(M, beta, gamma)
     delta = ( ( M^2 * (sind(beta)^2) ) - 1) / ( M^2 * (gamma + cosd(2*beta)) + 2 );
     delta = 2*cotd(beta)*delta;
