@@ -175,12 +175,16 @@ end
 % *Find delta when given M and beta (degrees)*
 % 
 % *Inputs:*
+%
+%
 % * Unperturbed Mach (AKA M1)
 % * oblique shock angle beta (degrees)
 % * Ratio of specific heats, 'gamma' of flow, usually 1.4
 % 
 % *Outputs:*
+%
 % * Wall deflection angle 'delta' (in degrees)
+%
 
 function delta = deltaFinder(M, beta, gamma)
     delta = ( ( M^2 * (sind(beta)^2) ) - 1) / ( M^2 * (gamma + cosd(2*beta)) + 2 );
