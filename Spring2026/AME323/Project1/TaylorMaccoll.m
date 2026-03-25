@@ -198,6 +198,40 @@ end
 % 2. Find V immediately after shock angle and break into r and theta components 
 % 3. Want to find V_theta =0 for BC
 
+
+
+%% INPUTS %%
+M1 = [1.5, 2, 5];
+beta = 40;         %initial guess for shock
+%already have gamma defined
+
+%% FOCUS ON M1(1) FIRST %%
+
+tcone = deltaFinder(M1(1), beta, gamma);       % Now have cone half angle assumed as wedge
+M2 = obliqueMach(M1(1), beta, tcone, gamma);   % Now have Mach after shock assumed as wedge
+
+v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;       % Now have velocity immediately after shock assumed as wedge
+
+vr = v_after * cos(beta-tcone);                % Radial component
+vt = sqrt(v_after^2 - vr^2);                   % Theta component
+
+
+%% TESTING %%
+Results = zeros(1,3);
+
+if vt < 0
+    beta = beta + (beta/2);
+elseif vt > 0
+    beta = beta - (beta/2);
+else
+    zeros(1) = tcone;
+end
+
+
+
+
+
+
 %convert into 1st order ODE
 %radial velocity
 Vr = y(1);
