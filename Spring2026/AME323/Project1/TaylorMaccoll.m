@@ -195,16 +195,28 @@ end
 %%Broad Steps Needed%%
 % 1. Assume is a wedge and get M2 and shock angle Beta (have functionsfor
 % them)
-% 2. Find V' at shock angle and break into r and theta components using
-% delta deflection
-% 3. Want to find V' in theta direction is =0 for BC
+% 2. Find V immediately after shock angle and break into r and theta components 
+% 3. Want to find V_theta =0 for BC
 
-%Velocity after Shock (v_after = v')
+%convert into 1st order ODE
+%radial velocity
+Vr = y(1);
+%equivalent to dV_r/d(theta)
+Vt = y(2); 
 
-v_after = ((2/((gamma-1)*M^2))+1);
-function[v_prime] = v_shock(Beta,v_after,delta)
-    v_prime = v_after * cos(Beta-delta)
-end
+%Set up y-variable for ode45 as collumn
+y = [y(1), y(2)]';
 
-y1 = v_after;
+%Derivative of y(2) equation as shown in notes
+numerator = ((gamma-1)/2)*(1-Vr^2-Vt^2)*(2*Vr+Vt*cot(theta))-(Vr*Vt^2);
+denominator = Vt^2-((gamma-1)/2)*(1-Vr^2-Vt^2);
+
+dy2dt = numerator / denominator;
+
+
+
+
+
+
+
 
