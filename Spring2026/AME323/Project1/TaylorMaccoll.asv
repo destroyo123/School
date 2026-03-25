@@ -215,9 +215,19 @@ v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;       % Now have velocity immediately a
 vr = v_after * cos(beta-tcone);                % Radial component
 vt = sqrt(v_after^2 - vr^2);                   % Theta component
 
+
+%% TESTING %%
+Results = zeros(1,3);
+
 if vt < 0
     beta = beta + (beta/2);
-    
+elseif vt > 0
+    beta = beta - (beta/2);
+else
+    zeros(1) = tcone;
+end
+
+
 
 
 
@@ -226,7 +236,8 @@ if vt < 0
 %radial velocity
 Vr = y(1);
 %equivalent to dV_r/d(theta)
-Vt = y(2); 
+dVr = y(2); 
+
 
 %Set up y-variable for ode45 as collumn
 y = [y(1), y(2)]';
