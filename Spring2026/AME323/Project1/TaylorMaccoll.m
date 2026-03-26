@@ -238,7 +238,7 @@ function outputbeta = coneBeta(Mach, theta, gamma)
     beta_low = asind(1/M1)+0.1; % low-end guess
     beta_high = 89; % high-end guess (tee-hee)
 
-    [outputbeta, ~] = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), [beta_low beta_high]);
+    [outputbeta, ~] = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), [beta_low beta_high], options);
 
 end % End of main function
 
@@ -257,7 +257,6 @@ function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
 
     % Density ratio across the shock
     M1n2 = (M1 * sin(beta_rad))^2;
-    eps = ((gamma - 1) * M1n2 + 2) / ((gamma + 1) * M1n2);
     
     theta_rad = deg2rad(theta_target); % Bookkeeping teehee
     beta_rad = deg2rad(beta_guess);
