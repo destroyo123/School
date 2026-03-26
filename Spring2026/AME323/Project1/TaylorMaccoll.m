@@ -266,16 +266,27 @@ function error = solve_for_theta(beta_guess, M1, gamma, target_theta)
     
     
     % 3. Find where Vt crosses zero (the physical cone surface)
-    Vt_vals = y_out(:,2);
-    [~, idx] = min(abs(Vt_vals));
-    theta_solved = rad2deg(t_out(idx));
+    Vt_vals = y(:,2);
+    
+    % Find zero crossing
+    idx = find(Vt_vals(1:end-1).*Vt_vals(2:end) < 0, 1);
+    
+    if isempty(idx)
+        theta_found = theta_out(end);
+    else
+        theta_found = theta_out(idx);
+    end
+    
+    if theta_found > theta_target
+        beta_low = beta_i;
+    else
+        beta_high = beta_i;
+    end
+
+    beta_sol = beta_i;
     
     % 4. Return the difference between solved theta and target theta
     error = theta_solved - target_theta;
-
-if theta_c_found > theta_cone
-    
-end
 
 function dydt = taylormaccoll(theta, y, gamma)
     Vr = y(1);
@@ -289,4 +300,8 @@ function dydt = taylormaccoll(theta, y, gamma)
     dVt = numerator / denominator;
 
     dydt = [dVr; dVt];
+
+end
+
+
 end
