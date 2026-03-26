@@ -54,44 +54,6 @@ M_inputs = [1.5, 2.0, 5.0];
 % Below is a set of functions used, based on lectures, NASA, and other
 % sources
 
-%%
-% *Prantl-Meyer Angle "nu"* 
-% 
-% *Inputs:* 
-%
-% * Local flow mach number 'M'
-% * Local flow ratio of specific heats 'gamma' (usually 1.4)
-% 
-% 
-% *Outputs:* 
-%
-%
-% * Prandtl-Meyer angle "nu", in degrees.
-%
-
-function prandtlMeyerAngle = nu(M, gamma)
-    prandtlMeyerAngle = sqrt((gamma+1)/(gamma-1)) * atand(sqrt(((gamma-1)/(gamma+1))*(M.^2 - 1))) - atand(sqrt(M.^2 - 1));
-end
-
-%%
-% *Oblique Shock Pressure Ratio* 
-% 
-% *Inputs:*
-%
-% * Unperturbed Mach 'M' (often notated as 'M1' in diagrams)
-% * Local ratio of specific heats 'gamma'
-% * Oblique shock angle 'beta'
-%
-% 
-% *Outputs:*
-%
-%
-% * Oblique-shock pressure ratio
-%
-function pressureRatio = obliquePR(M, gamma, beta)
-    pressureRatio = 1 + ( (2*gamma)/( gamma+1 ) * ( (M^2) * (sind(beta)^2) - 1 ) );
-end
-
 
 %%
 % *Oblique shock resultant Mach*
@@ -151,24 +113,6 @@ function Beta=beta(M,theta,gamma,n)
     
     Original script by Chris Plumley, undergraduate, University of Maryland.
     %}
-end
-
-%% DON'T NEED RIGHT?? %%
-% *Mach from prandtl-meyer angle (IN DEGREES)*
-% 
-% *Inputs:*
-%
-%
-% * Ratio of specific heats "gamma" of flow, usually 1.4
-% * Prandtl-Meyer angle "nu" (degrees)
-% 
-% *Outputs:*
-%
-% * Local mach number "mach"
-%
-
-function mach = meyerMach(gamma, nu)
-    mach = flowprandtlmeyer(gamma, nu, 'nu');
 end
 
 %%
