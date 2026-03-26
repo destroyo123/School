@@ -224,11 +224,11 @@ vt = v_after * sin(beta_max-tcone_max);                % Max theta component
 %% INITIAL CONDITIONS %%
 
 y0 = [vr, vt];
-
+thetaspan = []
 
 %% ODE45 TIME %%
 
-[theta_out, y0] = ode45()
+[theta_out, y0] = ode45(taylormaccoll, thetaspan, y0);
 
 %% TESTING %%
 Results = zeros(1,3);
