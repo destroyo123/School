@@ -195,12 +195,12 @@ vt = v_after * sin(beta_max-tcone_max);                % Max theta component
 
 %% INITIAL CONDITIONS %%
 
-y0 = [vr, vt];
-
+y0 = [vr, vt];                              % Initial Vr and Vtheta with maximum conditions
+thetaspan = [tcone_max , deg2rad(4)];       % Array spanning from maximum wedge deflection to 
 
 %% ODE45 TIME %%
 
-[theta_out, y0] = ode45()
+[theta_out, y0] = ode45(@(t, y) taylormaccoll(t, y, gamma), thetaspan, y0);
 
 %% TESTING %%
 Results = zeros(1,3);
