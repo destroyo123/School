@@ -153,7 +153,7 @@ function Beta=beta(M,theta,gamma,n)
     %}
 end
 
-%%
+%% DON'T NEED RIGHT?? %%
 % *Mach from prandtl-meyer angle (IN DEGREES)*
 % 
 % *Inputs:*
@@ -202,27 +202,34 @@ end
 
 %% INPUTS %%
 M1 = [1.5, 2, 5];
-beta = 40;         %initial guess for shock
+beta_i = deg2rad(40);         %initial guess for shock
 %already have gamma defined
 
 %% FOCUS ON M1(1) FIRST %%
 
-tcone = deltaFinder(M1(1), beta, gamma);       % Now have cone half angle assumed as wedge
-M2 = obliqueMach(M1(1), beta, tcone, gamma);   % Now have Mach after shock assumed as wedge
+tcone = deltaFinder(M1(1), beta_i, gamma);       % Now have cone half angle assumed as wedge
+M2 = obliqueMach(M1(1), beta_i, tcone, gamma);   % Now have Mach after shock assumed as wedge
 
-v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;       % Now have velocity immediately after shock assumed as wedge
+dtcone = @(beta) ((deltaFinder(M1(1), beta+(1*10^-8), gamma)) - (deltaFinder(M1(1), beta-(1*10^-8), gamma)) ...
+    / (2*10^-8));                                 % Now have how theta cone changes with guessed beta
+beta_max = fsolve(dtcone, beta_i);                % Have maximum beta possible from given mach
+tcone_max = deltaFinder(M1(1), beta_max, gamma);  % Ha
 
-vr = v_after * cos(beta-tcone);                % Radial component
-vt = sqrt(v_after^2 - vr^2);                   % Theta component
+%% MIGHT NOT NEED BC GEOMETRIC APPROACH %%
 
+v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;         % Now have velocity immediately after shock assumed as wedge
+
+vr = v_after * cos(beta_i-tcone);                % Radial component
+vt = sqrt(v_after^2 - vr^2);                     % Theta component
+%%%%%%%%%%%%%%%%%%
 
 %% TESTING %%
 Results = zeros(1,3);
 
 if vt < 0
-    beta = beta + (beta/2);
+    beta_i = beta_i + (beta_i/2);
 elseif vt > 0
-    beta = beta - (beta/2);
+    beta_i = beta_i - (beta_i/2);
 else
     zeros(1) = tcone;
 end
@@ -230,7 +237,9 @@ end
 
 
 
+%% ODE45 Function %%
 
+function dydt = taylormaccoll(theta, y, gamma)
 
 %convert into 1st order ODE
 %radial velocity
@@ -238,18 +247,18 @@ Vr = y(1);
 %equivalent to dV_r/d(theta)
 dVr = y(2); 
 
-
-%Set up y-variable for ode45 as collumn
-y = [y(1), y(2)]';
-
 %Derivative of y(2) equation as shown in notes
 numerator = ((gamma-1)/2)*(1-Vr^2-Vt^2)*(2*Vr+Vt*cot(theta))-(Vr*Vt^2);
 denominator = Vt^2-((gamma-1)/2)*(1-Vr^2-Vt^2);
 
 dy2dt = numerator / denominator;
 
+%Set up y-variable for ode45 as collumn
+dydt = [dVr, dy2dt]';
 
+end
 
+%%%%%%%%%%%%%%%%
 
 
 
