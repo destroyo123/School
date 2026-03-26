@@ -102,14 +102,14 @@ if plot1
     colors = ['r', 'g', 'b']; % colors to cycle through
     for i = 1:num_curves
         % Make a custon name "M = X.XX" for each curve and store for the legend
-        name = "$$M = " + sprintf("%.2f", M_inputs(i))+"$$";
+        name = "$M = " + sprintf("%.2f", M_inputs(i))+"$";
     
         % Grab the x 'θ' and y 'β' values
         x = theta_c; % Row vector of cone angles
         y = beta_outputs(i,:); % Row vector of shock angles
     
         % Cycle through the colors (however many colors are defined)
-        color = colors(mod(i,length(colors))+1);
+        color = colors(mod(i-1,length(colors))+1);
         
         % Plot the given curve, including the name (referenced in legend)
         plot(x, y, "LineWidth", lineWidth, "Color", color, DisplayName=name);
@@ -234,7 +234,10 @@ function outputbeta = coneBeta(Mach, theta, gamma)
     %% 3. Shooting Method (The Fix) %%
     % fzero tries different beta values until the error is zero
     options = optimset('TolX', 1e-4); % Loosen the tolerance for performance
-    outputbeta = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), beta_guess_i, options);
+    beta_low = asind(1/M1)+0.1;
+    beta_high = 89;
+
+    outputbeta = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), [beta_low beta_high]);
 
 end % End of main function
 
@@ -261,7 +264,7 @@ function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
 
     % 2. Integrate ODE from shock (beta) down toward axis (0)
     y0 = [vr0; vt0];
-    tspan = [beta_rad, 0];
+    tspan = [beta_rad, deg2rad(0.1)];
     
     % Solve the Taylor-Maccoll ODE using ODE45
     % but set the tolerances to be looser
