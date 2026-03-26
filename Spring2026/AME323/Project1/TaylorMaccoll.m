@@ -244,10 +244,13 @@ end % End of main function
 %% --- HELPER FUNCTIONS --- %%
 
 function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
+
     % 1. Initial conditions at shock boundary (Dimensionless)
     beta_rad = deg2rad(beta_guess);
     
-    M2 = obliqueMach(M1, beta_guess, theta_target, gamma);
+    delta = deltaFinder(M1, beta_guess, gamma);
+    M2 = obliqueMach(M1, beta_guess, delta, gamma);
+
     % V_prime is the velocity magnitude normalized by V_max
     V_prime = ( (2 / ((gamma - 1) * M2^2)) + 1 )^-0.5;
 
