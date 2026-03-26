@@ -49,8 +49,8 @@ num_curves = length(M_inputs);
 
 % Range of theta_c (cone half-angle θ) input valves to plot
 theta_c_min = 0.5; % Left bound of the curve (degrees)
-theta_c_max = 15; % Right bound of the curve (degrees)
-num_points = 4;
+theta_c_max = 54; % Right bound of the curve (degrees)
+num_points = 50;
 
 theta_c = linspace(theta_c_min, theta_c_max, num_points); % 'x' coord values
 
@@ -235,10 +235,25 @@ function outputbeta = coneBeta(Mach, theta, gamma)
     options = optimset('TolX', 1e-4); % Loosen the tolerance for performance
 
     %beta_low = asind(1/M1)+0.1; % low-end guess
-    beta_low = asind(1/M1)+0.1; % low-end guess
-    beta_high = 89; % high-end guess (tee-hee)
+    beta_vals = linspace(asind(1/M1)+0.5, 75, 20);
+    errors = zeros(size(beta_vals));
 
-    [outputbeta, ~] = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), [beta_low beta_high], options);
+    for k = 1:length(beta_vals)
+        errors(k) = solve_for_theta(beta_vals(k), M1, gamma, theta_cone_input);
+    end
+
+    % Find sign change
+    idx = find(errors(1:end-1).*errors(2:end) < 0, 1);
+
+    if isempty(idx)
+        outputbeta = NaN; % no solution
+        return;
+    end
+
+    beta_low = beta_vals(idx);
+    beta_high = beta_vals(idx+1);
+
+    outputbeta = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input),[beta_low beta_high]);
 
 end % End of main function
 
@@ -246,21 +261,23 @@ end % End of main function
 
 function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
 
-    beta_rad = deg2rad(beta_guess);
     theta_rad = deg2rad(theta_target);
-
     delta = deltaFinder(M1, beta_guess, gamma);
+
+    beta_rad = deg2rad(beta_guess);
+    delta_rad = deg2rad(delta);
+
     M2 = obliqueMach(M1, beta_guess, delta, gamma);
 
     V_prime = ((2 / ((gamma - 1) * M2^2)) + 1)^-0.5;
 
-    vr0 =  V_prime * cos(beta_rad - theta_rad);
-    vt0 = -V_prime * sin(beta_rad - theta_rad); % NOTE: Vt should be negative here
+    vr0 =  V_prime * cos(beta_rad - delta_rad);
+    vt0 = -V_prime * sin(beta_rad - delta_rad); % NOTE: Vt should be negative here
 
     y0 = [vr0; vt0];
-    tspan = [beta_rad, deg2rad(0.5)];
+    tspan = [beta_rad, deg2rad(2)];
 
-    ode45options = odeset('RelTol', 1e-6, 'AbsTol', 1e-8);
+    ode45options = odeset('RelTol', 1e-3, 'AbsTol', 1e-5);
     [theta_out, y_out] = ode45(@(t, y) taylormaccoll(t, y, gamma), tspan, y0, ode45options);
 
     Vt_vals = y_out(:, 2);
@@ -290,6 +307,9 @@ function dydt = taylormaccoll(theta, y, gamma)
     % The Taylor-Maccoll Equation
     numerator = ((gamma-1)/2)*(1-Vr^2-Vt^2)*(2*Vr+Vt*cot(theta))-(Vr*Vt^2);
     denominator = Vt^2-((gamma-1)/2)*(1-Vr^2-Vt^2);
+    if abs(denominator) < 1e-6
+    denominator = sign(denominator)*1e-6;
+    end
 
     dVr = Vt;
     dVt = numerator / denominator;
