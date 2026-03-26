@@ -299,10 +299,7 @@ function error = solve_for_theta(beta_guess, M1, gamma, target_theta)
     V_max_inv = ( (2/((gamma-1)*M1^2)) + 1 )^-0.5;
     vr0 = V_max_inv * cos(beta_rad);
     vt0 = -V_max_inv * eps * sin(beta_rad); 
-<<<<<<< HEAD
-=======
-
->>>>>>> 2bfcd969c5d104ee992756992e8e5fbf177b8410
+    
 vr = v_after * cos(deg2rad(beta_i)-deg2rad(theta_cone_input));                % Radial component
 vt = v_after * sin(deg2rad(beta_i)-deg2rad(theta_cone_input));                % Theta component
 
