@@ -228,11 +228,11 @@ outputbeta = Mach*theta + gamma; % placeholder for now
 %% INPUTS %%
 
 % CHANGE TO USE THE FUNCTION INPUT
-M1 = 1.5;
+M1 = Mach;
 gamma = 1.4;
 
 % CHANGE TO USE THE FUNCTION INPUT
-theta_cone_input = 10; % *degrees
+theta_cone_input = theta; % *degrees
 
 % Use input M1, gamma to guess the shock angle.
 % Guess = if it were a wedge, not a cone
