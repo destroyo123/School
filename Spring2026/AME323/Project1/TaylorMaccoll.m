@@ -216,9 +216,16 @@ thetaspan = [tcone_max , deg2rad(4)];       % Array spanning from maximum wedge 
 
 %% ODE45 TIME %%
 
-[theta_out, y0] = ode45(@(t, y) taylormaccoll(t, y, gamma), thetaspan, y0);
+[theta_out, y] = ode45(@(t, y) taylormaccoll(t, y, gamma), thetaspan, y0);
 
 %% TESTING %%
+
+if y(2) == 0
+    theta_cone = theta_out;
+else
+end
+
+%%%%%%%%%%%%
 Results = zeros(1,3);
 
 if vt < 0

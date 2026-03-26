@@ -45,7 +45,7 @@ M_inputs = [1.5, 2.0, 5.0];
 % Sets up system of θ, β, M, other crap.
 
 % number of curves to plot (same as number of mach inputs)
-N_curves = length(M_inputs);
+num_curves = length(M_inputs);
 
 % Range of theta_c (cone half-angle θ) input valves to plot
 theta_c_min = 1; % Left bound of the curve (degrees)
@@ -55,9 +55,9 @@ num_points = 200;
 theta_c = linspace(theta_c_min, theta_c_max, num_points); % 'x' coord values
 
 % Set up an empty array for the output β values
-% Row: one M input
-% Column: one value of theta_c (see above definitions)
-beta_outputs = zeros(num_points)
+% Each row: One M input
+% Each column: The values of theta_c (see above definitions)
+beta_outputs = zeros(num_curves, num_points);
 
 
 %% Solving the System of Equations
@@ -211,14 +211,19 @@ vt = v_after * sin(beta_max-tcone_max);                % Max theta component
 
 %% INITIAL CONDITIONS %%
 
-y0 = [vr, vt];
-thetaspan = []
+y0 = [vr, vt];                              % Initial Vr and Vtheta with maximum conditions
+thetaspan = [tcone_max , deg2rad(4)];       % Array spanning from maximum wedge deflection to 
 
 %% ODE45 TIME %%
 
-[theta_out, y0] = ode45(taylormaccoll, thetaspan, y0);
+[theta_out, y] = ode45(@(t, y) taylormaccoll(t, y, gamma), thetaspan, y0);
 
 %% TESTING %%
+
+if y == 0
+    
+
+%%%%%%%%%%%%
 Results = zeros(1,3);
 
 if vt < 0
