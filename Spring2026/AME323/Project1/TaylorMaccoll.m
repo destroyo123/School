@@ -210,9 +210,10 @@ beta_i = deg2rad(40);         %initial guess for shock
 tcone = deltaFinder(M1(1), beta_i, gamma);       % Now have cone half angle assumed as wedge
 M2 = obliqueMach(M1(1), beta_i, tcone, gamma);   % Now have Mach after shock assumed as wedge
 
-dtcone = @(beta_i) ((deltaFinder(M1(1), beta_i+(1*10^-8), gamma)) - (deltaFinder(M1(1), beta_i-(1*10^-8), gamma)) ...
+dtcone = @(beta) ((deltaFinder(M1(1), beta+(1*10^-8), gamma)) - (deltaFinder(M1(1), beta-(1*10^-8), gamma)) ...
     / (2*10^-8));                                 % Now have how theta cone changes with guessed beta
-
+beta_max = fsolve(dtcone, beta_i);                % Have maximum beta possible from given mach
+tcone_max = deltaFinder(M1(1), beta_max, gamma);  % Have maximum wedge half angle from max beta
 
 %% MIGHT NOT NEED BC GEOMETRIC APPROACH %%
 
