@@ -103,7 +103,7 @@ if plot1
     names = zeros(1,num_curves);
     for i = 1:num_curves
         % Make a custon name "M = X.XX" for each curve and store for the legend
-        name = "$$M = " + compose("%.2f", value)+"$$";
+        name = "$$M = " + sprintf("%.2f", value)+"$$";
         names(i) = name;
     
         % Grab the x 'θ' and y 'β' values
@@ -224,8 +224,6 @@ end
 
 function outputbeta = coneBeta(Mach, theta, gamma)
 outputbeta = Mach*theta + gamma; % placeholder for now
-end
-
 
 %% INPUTS %%
 
@@ -319,5 +317,10 @@ elseif vt > 0
 else
     zeros(1) = theta_cone_input;
 end
+
+end
+
+
+
 
 
