@@ -244,16 +244,20 @@ function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
     % 1. Initial conditions at shock boundary (Dimensionless)
     beta_rad = deg2rad(beta_guess);
     
+    M2 = obliqueMach(M1, beta_guess, theta_target, gamma);
     % V_prime is the velocity magnitude normalized by V_max
-    V_prime = ( (2 / ((gamma - 1) * M1^2)) + 1 )^-0.5;
+    V_prime = ( (2 / ((gamma - 1) * M2^2)) + 1 )^-0.5;
 
     % Density ratio across the shock
     M1n2 = (M1 * sin(beta_rad))^2;
     eps = ((gamma - 1) * M1n2 + 2) / ((gamma + 1) * M1n2);
     
+    theta_rad = deg2rad(theta_target); % Bookkeeping teehee
+    beta_rad = deg2rad(beta_guess);
+
     % Initial velocity components (Vr and Vt)
-    vr0 = V_prime * cos(beta_rad); 
-    vt0 = -V_prime * eps * sin(beta_rad); 
+    vr0 = V_prime * cos(beta_rad-theta_rad); 
+    vt0 = V_prime  * sin(beta_rad-theta_rad); 
 
     % 2. Integrate ODE from shock (beta) down toward axis (0)
     y0 = [vr0; vt0];
@@ -277,16 +281,10 @@ function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
         theta_found = theta_out(idx);
     end
     
-    if theta_found > theta_target
-        beta_low = beta_rad;
-    else
-        beta_high = beta_rad;
-    end
-
-    beta_sol = beta_rad;
-    
     % 4. Return the difference between solved theta and target theta
-    error = theta_found - theta_target;
+    % except note that theta_target is input in degrees.
+    error = theta_found - deg2rad(theta_target); % Outputs radians
+end
 
 function dydt = taylormaccoll(theta, y, gamma)
     Vr = y(1);
@@ -300,8 +298,5 @@ function dydt = taylormaccoll(theta, y, gamma)
     dVt = numerator / denominator;
 
     dydt = [dVr; dVt];
-
-end
-
 
 end
