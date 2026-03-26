@@ -332,4 +332,7 @@ theta_c_found = theta_out(idx);
     
     % 4. Return the error (fzero wants this to be 0)
     error = theta_solved - target_theta;
+
+if theta_c_found > theta_cone
+    
 end
