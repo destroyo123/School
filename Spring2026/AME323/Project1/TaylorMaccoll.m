@@ -160,13 +160,6 @@ beta_max = fsolve(dtcone, beta_i);                % Have maximum beta possible f
 tcone_max = deltaFinder(M1(1), beta_max, gamma);  % Have maximum wedge half angle from max beta
 
 
-
-%% GEOMETRY %%
-
-v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;         % Now have velocity immediately after shock assumed as wedge
-
-vr = v_after * cos(beta_i-tcone);                % Radial component
-vt = v_after * sin(beta_i-tcone);                % Theta component
 %%%%%%%%%%%%%%%%%%
 
 %% TESTING %%
@@ -204,9 +197,19 @@ dydt = [dVr, dy2dt]';
 
 end
 
-%%%%%%%%%%%%%%%%
 
+%% GEOMETRY %%
 
+v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;         % Now have velocity immediately after shock assumed as wedge
+
+vr = v_after * cos(beta_i-tcone);                % Radial component
+vt = v_after * sin(beta_i-tcone);                % Theta component
+
+%% INITIAL CONDITIONS %%
+
+vr0 = 
+
+y0 = 
 
 
 
