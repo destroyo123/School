@@ -277,10 +277,28 @@ dydt = [dVr, dVt]';
 
 end
 
-error_function = 
-%% GEOMETRY %%
+% Use fzero to find the beta that makes (Solved_Theta - Target_Theta) = 0
+% beta_i (your wedge guess) is the starting point
+outputbeta = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), beta_i);
 
-v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;         % Now have dimensionless velocity immediately after shock assumed as wedge
+end
+
+% Used in output beta finding:
+% Calculates error between the expected (input) theta_c
+% and the theta_c from our beta guess, which is found by ode45()
+
+function error = solve_for_theta(beta_guess, M1, gamma, target_theta)
+    % 1. Initial conditions at shock boundary (Dimensionless)
+    beta_rad = deg2rad(beta_guess);
+    M1n2 = (M1 * sin(beta_rad))^2;
+    
+    % Velocity ratio across shock (rho1/rho2)
+    eps = ((gamma-1)*M1n2 + 2) / ((gamma+1)*M1n2);
+    
+    % Vr is continuous; Vt jumps based on density ratio
+    V_max_inv = ( (2/((gamma-1)*M1^2)) + 1 )^-0.5;
+    vr0 = V_max_inv * cos(beta_rad);
+    vt0 = -V_max_inv * eps * sin(beta_rad); 
 
 vr = v_after * cos(deg2rad(beta_i)-deg2rad(theta_cone_input));                % Radial component
 vt = v_after * sin(deg2rad(beta_i)-deg2rad(theta_cone_input));                % Theta component
@@ -296,32 +314,22 @@ thetaspan = [deg2rad(beta_i) , deg2rad(0.1)];              % Array spanning from
 
 Vt_vals = y(:,2);
 
-<<<<<<< HEAD
-[~, idx] = min(abs(Vt_vals));
-theta_solved = rad2deg(theta_out(idx));
-
-outputbeta = beta(M1,theta_solved,gamma,0);
-=======
 if y(end,2) < 1*10^-4
     theta_cone = theta_out(end);
 else
 end
 
-%%%%%%%%%%%%
-Results = zeros(1,3);
+[~, idx] = min(abs(Vt_vals));
+theta_c_found = theta_out(idx);
 
-if vt < 0
-    beta_i = beta_i + (beta_i/2);
-elseif vt > 0
-    beta_i = beta_i - (beta_i/2);
-else
-    zeros(1) = theta_cone_input;
+    % 2. Integrate ODE from shock (beta) down toward axis
+    y0 = [vr0, vt0];
+    [t_out, y_out] = ode45(@(t, y) taylormaccoll(t, y, gamma), [beta_rad, 0], y0);
+    
+    % 3. Find where Vt = 0 (the cone surface)
+    [~, idx] = min(abs(y_out(:,2)));
+    theta_solved = rad2deg(t_out(idx));
+    
+    % 4. Return the error (fzero wants this to be 0)
+    error = theta_solved - target_theta;
 end
->>>>>>> af7e5da702daecf627b0b084d3792135ca33471b
-
-end
-
-
-
-
-
