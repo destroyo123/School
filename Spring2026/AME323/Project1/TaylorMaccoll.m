@@ -237,6 +237,11 @@ thetaspan = [deg2rad(beta_i) , deg2rad(0.1)];              % Array spanning from
 
 [theta_out, y] = ode45(@(t, y) taylormaccoll(t, y, gamma), thetaspan, y0);
 
+Vt_vals = y(:,2);
+
+[~, idx] = min(abs(Vt_vals));
+theta_c_found = theta_out(idx);
+
 %% TESTING %%
 
 if y(2) == 0
