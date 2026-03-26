@@ -297,30 +297,10 @@ thetaspan = [deg2rad(beta_i) , deg2rad(0.1)];              % Array spanning from
 
 Vt_vals = y(:,2);
 
-[~, idx] = min(abs(Vt_vals));
-theta_c_found = theta_out(idx);
-
-%% TESTING %%
-
-if y(2) == 0
-    theta_cone = theta_out;
+if y(end,2) < 1*10^-4
+    theta_cone = theta_out(end);
 else
 end
-
-%%%%%%%%%%%%
-Results = zeros(1,3);
-
-if vt < 0
-    beta_i = beta_i + (beta_i/2);
-elseif vt > 0
-    beta_i = beta_i - (beta_i/2);
-else
-    zeros(1) = theta_cone_input;
-end
-
-end
-
-
 
 
 
