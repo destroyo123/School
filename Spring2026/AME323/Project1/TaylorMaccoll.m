@@ -161,7 +161,7 @@ tcone_max = deltaFinder(M1(1), beta_max, gamma);  % Have maximum wedge half angl
 
 
 
-%% ODE45 Function %%
+%% Taylor-Maccoll 1st Order ODE Function %%
 
 function dydt = taylormaccoll(theta, y, gamma)
 
@@ -192,9 +192,7 @@ vt = v_after * sin(beta_max-tcone_max);                % Max theta component
 
 %% INITIAL CONDITIONS %%
 
-vr0 = 
-
-y0 = 
+y0 = [vr, vt];
 
 
 %% TESTING %%
