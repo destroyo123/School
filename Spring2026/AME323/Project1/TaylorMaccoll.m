@@ -41,8 +41,24 @@ T_amb = 288.15; % Std sea level temeprature is 273.15 Kelvin?
 % The given mach values for which we need to generate curves:
 M_inputs = [1.5, 2.0, 5.0];
 
-%% Setting Up the System of Equations
-% Sets up the functions of θ, β, M, other crap (is this actually what we wanna do?)
+%% Setting up the arrays and variables
+% Sets up system of θ, β, M, other crap.
+
+% number of curves to plot (same as number of mach inputs)
+num_curves = length(M_inputs);
+
+% Range of theta_c (cone half-angle θ) input valves to plot
+theta_c_min = 1; % Left bound of the curve (degrees)
+theta_c_max = 10; % Right bound of the curve (degrees)
+num_points = 200;
+
+theta_c = linspace(theta_c_min, theta_c_max, num_points); % 'x' coord values
+
+% Set up an empty array for the output β values
+% Each row: One M input
+% Each column: The values of theta_c (see above definitions)
+beta_outputs = zeros(num_curves, num_points);
+
 
 %% Solving the System of Equations
 % Solves the system and logs the results.
