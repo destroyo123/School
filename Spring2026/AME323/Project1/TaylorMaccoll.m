@@ -222,117 +222,74 @@ end
 % 3. Want to find V_theta = 0 for BC
 
 function outputbeta = coneBeta(Mach, theta, gamma)
-% outputbeta = Mach*theta + gamma; % placeholder for now
+    %% 1. Setup Inputs %%
+    M1 = Mach;
+    theta_cone_input = theta; % degrees
 
-%% INPUTS %%
+    %% 2. Initial Guess %%
+    % Get an initial guess for the shock angle beta (assuming it's a wedge)
+    % This provides a starting point for fzero
+    beta_guess_i = beta(M1, theta_cone_input, gamma, 0);
 
-% CHANGE TO USE THE FUNCTION INPUT
-M1 = Mach;
-gamma = 1.4;
+    %% 3. Shooting Method (The Fix) %%
+    % fzero tries different beta values until the error is zero
+    options = optimset('TolX', 1e-4); % Loosen the tolerance for performance
+    outputbeta = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), beta_guess_i, options);
 
-% CHANGE TO USE THE FUNCTION INPUT
-theta_cone_input = theta; % *degrees
+end % End of main function
 
-% Use input M1, gamma to guess the shock angle.
-% Guess = if it were a wedge, not a cone
-% gamma defined already. That n=0 parameter finds the WEAK SHOCK case.
-beta_i = beta(M1,theta_cone_input,gamma,0);
-
-%% FOCUS ON M1 FIRST %%
-
-% Mach after shock assumed as wedge
-M2 = obliqueMach(M1, beta_i, theta_cone_input, gamma);
-
-% How theta cone changes with guessed beta
-dtheta_cone_input = @(beta) ((deltaFinder(M1, beta+(1*10^-8), gamma)) - (deltaFinder(M1, beta-(1*10^-8), gamma)) ...
-    / (2*10^-8));
-
-% Maximum beta possible from given mach
-beta_max = fsolve(dtheta_cone_input, beta_i);
-
-% Maximum wedge half angle from max beta
-theta_cone_input_max = deltaFinder(M1, beta_max, gamma);
-
-
-
-%% Taylor-Maccoll 1st Order ODE Function %%
-
-function dydt = taylormaccoll(theta, y, gamma)
-
-% convert into 1st order ODE
-% radial velocity
-Vr = y(1);
-% equivalent to dV_r/d(theta)
-Vt = y(2); 
-dVr = Vt;
-
-% Derivative of y(2) equation as shown in notes
-numerator = ((gamma-1)/2)*(1-Vr^2-Vt^2)*(2*Vr+Vt*cot(theta))-(Vr*Vt^2);
-denominator = Vt^2-((gamma-1)/2)*(1-Vr^2-Vt^2);
-
-dVt = numerator / denominator;
-
-% Set up y-variable for ode45 as collumn
-dydt = [dVr, dVt]';
-
-end
-
-% Use fzero to find the beta that makes (Solved_Theta - Target_Theta) = 0
-% beta_i (your wedge guess) is the starting point
-outputbeta = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), beta_i);
-
-end
-
-% Used in output beta finding:
-% Calculates error between the expected (input) theta_c
-% and the theta_c from our beta guess, which is found by ode45()
+%% --- HELPER FUNCTIONS --- %%
 
 function error = solve_for_theta(beta_guess, M1, gamma, target_theta)
     % 1. Initial conditions at shock boundary (Dimensionless)
     beta_rad = deg2rad(beta_guess);
+    
+    % V_prime is the velocity magnitude normalized by V_max
+    V_prime = ( (2 / ((gamma - 1) * M1^2)) + 1 )^-0.5;
+
+    % Density ratio across the shock
     M1n2 = (M1 * sin(beta_rad))^2;
+    eps = ((gamma - 1) * M1n2 + 2) / ((gamma + 1) * M1n2);
     
-    % Velocity ratio across shock (rho1/rho2)
-    eps = ((gamma-1)*M1n2 + 2) / ((gamma+1)*M1n2);
+    % Initial velocity components (Vr and Vt)
+    vr0 = V_prime * cos(beta_rad); 
+    vt0 = -V_prime * eps * sin(beta_rad); 
+
+    % 2. Integrate ODE from shock (beta) down toward axis (0)
+    y0 = [vr0; vt0];
+    tspan = [beta_rad, 0];
     
-    % Vr is continuous; Vt jumps based on density ratio
-    V_max_inv = ( (2/((gamma-1)*M1^2)) + 1 )^-0.5;
-    vr0 = V_max_inv * cos(beta_rad);
-    vt0 = -V_max_inv * eps * sin(beta_rad); 
+    % Solve the Taylor-Maccoll ODE using ODE45
+    % but set the tolerances to be looser
+    ode45options = odeset('RelTol', 1e-2, 'AbsTol', 1e-4);
+    [t_out, y_out] = ode45(@(t, y) taylormaccoll(t, y, gamma), tspan, y0, ode45options);
     
-vr = v_after * cos(deg2rad(beta_i)-deg2rad(theta_cone_input));                % Radial component
-vt = v_after * sin(deg2rad(beta_i)-deg2rad(theta_cone_input));                % Theta component
-
-%% INITIAL CONDITIONS %%
-
-y0 = [vr, vt];                                             % Initial Vr and Vtheta with maximum conditions
-thetaspan = [deg2rad(beta_i) , deg2rad(0.1)];              % Array spanning from maximum wedge deflection in degrees 
-
-%% ODE45 TIME %%
-
-[theta_out, y] = ode45(@(t, y) taylormaccoll(t, y, gamma), thetaspan, y0);
-
-Vt_vals = y(:,2);
-
-if y(end,2) < 1*10^-4
-    theta_cone = theta_out(end);
-else
-end
-
-[~, idx] = min(abs(Vt_vals));
-theta_c_found = theta_out(idx);
-
-    % 2. Integrate ODE from shock (beta) down toward axis
-    y0 = [vr0, vt0];
-    [t_out, y_out] = ode45(@(t, y) taylormaccoll(t, y, gamma), [beta_rad, 0], y0);
     
-    % 3. Find where Vt = 0 (the cone surface)
-    [~, idx] = min(abs(y_out(:,2)));
+    % 3. Find where Vt crosses zero (the physical cone surface)
+    Vt_vals = y_out(:,2);
+    [~, idx] = min(abs(Vt_vals));
     theta_solved = rad2deg(t_out(idx));
     
-    % 4. Return the error (fzero wants this to be 0)
+    % 4. Return the difference between solved theta and target theta
     error = theta_solved - target_theta;
+<<<<<<< HEAD
 
 if theta_c_found > theta_cone
     
+=======
+end
+
+function dydt = taylormaccoll(theta, y, gamma)
+    Vr = y(1);
+    Vt = y(2); 
+
+    % The Taylor-Maccoll Equation
+    numerator = ((gamma-1)/2)*(1-Vr^2-Vt^2)*(2*Vr+Vt*cot(theta))-(Vr*Vt^2);
+    denominator = Vt^2-((gamma-1)/2)*(1-Vr^2-Vt^2);
+
+    dVr = Vt;
+    dVt = numerator / denominator;
+
+    dydt = [dVr; dVt];
+>>>>>>> f6019c9b682e353bb741a0fa3109322d68a2f891
 end
