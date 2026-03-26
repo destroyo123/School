@@ -42,7 +42,7 @@ T_amb = 288.15; % Std sea level temeprature is 273.15 Kelvin?
 M_inputs = [1.5, 2.0, 5.0];
 
 %% Setting Up the System of Equations
-% Setmks up the functions of θ, β, M, other crap (is this actually what we wanna do?)
+% Sets up the functions of θ, β, M, other crap (is this actually what we wanna do?)
 
 %% Solving the System of Equations
 % Solves the system and logs the results.
