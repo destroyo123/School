@@ -103,12 +103,12 @@ if plot1
     names = zeros(1,num_curves);
     for i = 1:num_curves
         % Make a custon name "M = X.XX" for each curve and store for the legend
-        name = "$$M = " + sprintf("%.2f", value)+"$$";
+        name = "$$M = " + sprintf("%.2f", M_inputs(i))+"$$";
         names(i) = name;
     
         % Grab the x 'θ' and y 'β' values
         x = theta_c; % Row vector of cone angles
-        y = beta_outputs(i); % Row vector of shock angles
+        y = beta_outputs(i,:); % Row vector of shock angles
     
         % Cycle through the colors (however many colors are defined)
         color = colors(mod(i,length(colors))+1);
@@ -122,7 +122,7 @@ if plot1
     % Put the legend and axis labels
     legend(FontSize=legendFontSize,Location="northwest");
     xlabel("$\theta_{cone}$", fontsize = axisFontSize);
-    ylabel(names, FontSize = axisFontSize);
+    ylabel("$\beta_{cone}$", FontSize = axisFontSize);
     
     % Sets axes at origin.
     ax1.XAxisLocation = 'origin';
@@ -297,10 +297,20 @@ thetaspan = [deg2rad(beta_i) , deg2rad(0.1)];              % Array spanning from
 
 Vt_vals = y(:,2);
 
+<<<<<<< HEAD
 if y(end,2) < 1*10^-4
     theta_cone = theta_out(end);
 else
 end
 
+=======
+[~, idx] = min(abs(Vt_vals));
+theta_c_found = theta_out(idx);
+
+end
+
+
+
+>>>>>>> 0b0c76cebb388bb1ed594c12c2046d6b46eb0815
 
 
