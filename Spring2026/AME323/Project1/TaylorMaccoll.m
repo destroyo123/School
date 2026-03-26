@@ -68,10 +68,10 @@ for i = 1:num_curves
 
         % Grab the input
         freestream_mach = M_inputs(i);
-        cone_angle = theta_c(i,j);
+        cone_angle = theta_c(j);
 
         % Store the Output
-        beta_outputs(i,j) = coneBeta();
+        beta_outputs(i,j) = coneBeta(freestream_mach, cone_angle, gamma);
 
     end
 end
@@ -134,7 +134,6 @@ end
 %% Functions Used
 % Below is a set of functions used, based on lectures, NASA, and other
 % sources
-
 
 %%
 % *Oblique shock resultant Mach*
@@ -223,6 +222,9 @@ end
 % 2. Find V immediately after shock angle and break into r and theta components 
 % 3. Want to find V_theta = 0 for BC
 
+function outputbeta = coneBeta(Mach, theta, gamma)
+outputbeta = Mach*theta + gamma; % placeholder for now
+end
 
 
 %% INPUTS %%
