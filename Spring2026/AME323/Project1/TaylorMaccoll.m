@@ -217,7 +217,7 @@ tcone_max = deltaFinder(M1(1), beta_max, gamma);  % Have maximum wedge half angl
 
 
 
-%% MIGHT NOT NEED BC GEOMETRIC APPROACH %%
+%% GEOMETRY %%
 
 v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;         % Now have velocity immediately after shock assumed as wedge
 
