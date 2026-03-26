@@ -198,6 +198,10 @@ vt = v_after * sin(beta_max-tcone_max);                % Max theta component
 y0 = [vr, vt];
 
 
+%% ODE45 TIME %%
+
+[theta_out, y0] = ode45()
+
 %% TESTING %%
 Results = zeros(1,3);
 
