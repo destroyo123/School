@@ -229,7 +229,6 @@ end
 
 % CHANGE TO USE THE FUNCTION INPUT
 M1 = 1.5;
-gamma = 1.4;
 
 % CHANGE TO USE THE FUNCTION INPUT
 theta_cone_input = 10; % *degrees
@@ -267,17 +266,16 @@ function dydt = taylormaccoll(theta, y, gamma)
 % radial velocity
 Vr = y(1);
 % equivalent to dV_r/d(theta)
-Vt = y(2); 
-dVr = Vt;
+dVr = y(2); 
 
 % Derivative of y(2) equation as shown in notes
 numerator = ((gamma-1)/2)*(1-Vr^2-Vt^2)*(2*Vr+Vt*cot(theta))-(Vr*Vt^2);
 denominator = Vt^2-((gamma-1)/2)*(1-Vr^2-Vt^2);
 
-dVt = numerator / denominator;
+dy2dt = numerator / denominator;
 
 % Set up y-variable for ode45 as collumn
-dydt = [dVr, dVt]';
+dydt = [dVr, dy2dt]';
 
 end
 
@@ -286,13 +284,13 @@ end
 
 v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;         % Now have dimensionless velocity immediately after shock assumed as wedge
 
-vr = v_after * cos(deg2rad(beta_i)-deg2rad(tcone));                % Radial component
-vt = v_after * sin(deg2rad(beta_i)-deg2rad(tcone));                % Theta component
+vr = v_after * cos(beta_max-tcone_max);                % Max radial component
+vt = v_after * sin(beta_max-tcone_max);                % Max theta component
 
 %% INITIAL CONDITIONS %%
 
-y0 = [vr, vt];                                             % Initial Vr and Vtheta with maximum conditions
-thetaspan = [deg2rad(beta_i) , deg2rad(0.1)];              % Array spanning from maximum wedge deflection in degrees 
+y0 = [vr, vt];                              % Initial Vr and Vtheta with maximum conditions
+thetaspan = [tcone_max , deg2rad(4)];       % Array spanning from maximum wedge deflection to 
 
 %% ODE45 TIME %%
 
