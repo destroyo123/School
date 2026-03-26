@@ -49,8 +49,8 @@ num_curves = length(M_inputs);
 
 % Range of theta_c (cone half-angle θ) input valves to plot
 theta_c_min = 0.5; % Left bound of the curve (degrees)
-theta_c_max = 60; % Right bound of the curve (degrees)
-num_points = 50;
+theta_c_max = 15; % Right bound of the curve (degrees)
+num_points = 4;
 
 theta_c = linspace(theta_c_min, theta_c_max, num_points); % 'x' coord values
 
@@ -100,7 +100,6 @@ if plot1
     hold on;
     
     colors = ['r', 'g', 'b']; % colors to cycle through
-    names = zeros(1,num_curves);
     for i = 1:num_curves
         % Make a custon name "M = X.XX" for each curve and store for the legend
         name = "$$M = " + sprintf("%.2f", M_inputs(i))+"$$";
@@ -223,7 +222,7 @@ end
 % 3. Want to find V_theta = 0 for BC
 
 function outputbeta = coneBeta(Mach, theta, gamma)
-outputbeta = Mach*theta + gamma; % placeholder for now
+% outputbeta = Mach*theta + gamma; % placeholder for now
 
 %% INPUTS %%
 
@@ -278,28 +277,39 @@ dydt = [dVr, dVt]';
 
 end
 
+% Use fzero to find the beta that makes (Solved_Theta - Target_Theta) = 0
+% beta_i (your wedge guess) is the starting point
+outputbeta = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), beta_i);
 
-%% GEOMETRY %%
+end
 
-v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;         % Now have dimensionless velocity immediately after shock assumed as wedge
+% Used in output beta finding:
+% Calculates error between the expected (input) theta_c
+% and the theta_c from our beta guess, which is found by ode45()
 
-vr = v_after * cos(deg2rad(beta_i)-deg2rad(theta_cone_input));                % Radial component
-vt = v_after * sin(deg2rad(beta_i)-deg2rad(theta_cone_input));                % Theta component
+function error = solve_for_theta(beta_guess, M1, gamma, target_theta)
+    % 1. Initial conditions at shock boundary (Dimensionless)
+    beta_rad = deg2rad(beta_guess);
+    M1n2 = (M1 * sin(beta_rad))^2;
+    
+    % Velocity ratio across shock (rho1/rho2)
+    eps = ((gamma-1)*M1n2 + 2) / ((gamma+1)*M1n2);
+    
+    % Vr is continuous; Vt jumps based on density ratio
+    V_max_inv = ( (2/((gamma-1)*M1^2)) + 1 )^-0.5;
+    vr0 = V_max_inv * cos(beta_rad);
+    vt0 = -V_max_inv * eps * sin(beta_rad); 
 
-%% INITIAL CONDITIONS %%
-
-y0 = [vr, vt];                                             % Initial Vr and Vtheta with maximum conditions
-thetaspan = [deg2rad(beta_i) , deg2rad(0.1)];              % Array spanning from maximum wedge deflection in degrees 
-
-%% ODE45 TIME %%
-
-[theta_out, y] = ode45(@(t, y) taylormaccoll(t, y, gamma), thetaspan, y0);
-
-Vt_vals = y(:,2);
-
-[~, idx] = min(abs(Vt_vals));
-theta_c_found = theta_out(idx);
-
+    % 2. Integrate ODE from shock (beta) down toward axis
+    y0 = [vr0, vt0];
+    [t_out, y_out] = ode45(@(t, y) taylormaccoll(t, y, gamma), [beta_rad, 0], y0);
+    
+    % 3. Find where Vt = 0 (the cone surface)
+    [~, idx] = min(abs(y_out(:,2)));
+    theta_solved = rad2deg(t_out(idx));
+    
+    % 4. Return the error (fzero wants this to be 0)
+    error = theta_solved - target_theta;
 end
 
 

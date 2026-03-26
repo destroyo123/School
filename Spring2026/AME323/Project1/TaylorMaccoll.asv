@@ -49,8 +49,8 @@ num_curves = length(M_inputs);
 
 % Range of theta_c (cone half-angle θ) input valves to plot
 theta_c_min = 0.5; % Left bound of the curve (degrees)
-theta_c_max = 60; % Right bound of the curve (degrees)
-num_points = 50;
+theta_c_max = 15; % Right bound of the curve (degrees)
+num_points = 4;
 
 theta_c = linspace(theta_c_min, theta_c_max, num_points); % 'x' coord values
 
@@ -100,15 +100,14 @@ if plot1
     hold on;
     
     colors = ['r', 'g', 'b']; % colors to cycle through
-    names = zeros(1,num_curves);
     for i = 1:num_curves
         % Make a custon name "M = X.XX" for each curve and store for the legend
-        name = "$$M = " + sprintf("%.2f", value)+"$$";
+        name = "$$M = " + sprintf("%.2f", M_inputs(i))+"$$";
         names(i) = name;
     
         % Grab the x 'θ' and y 'β' values
         x = theta_c; % Row vector of cone angles
-        y = beta_outputs(i); % Row vector of shock angles
+        y = beta_outputs(i,:); % Row vector of shock angles
     
         % Cycle through the colors (however many colors are defined)
         color = colors(mod(i,length(colors))+1);
@@ -122,7 +121,7 @@ if plot1
     % Put the legend and axis labels
     legend(FontSize=legendFontSize,Location="northwest");
     xlabel("$\theta_{cone}$", fontsize = axisFontSize);
-    ylabel(names, FontSize = axisFontSize);
+    ylabel("$\beta_{cone}$", FontSize = axisFontSize);
     
     % Sets axes at origin.
     ax1.XAxisLocation = 'origin';
@@ -223,16 +222,16 @@ end
 % 3. Want to find V_theta = 0 for BC
 
 function outputbeta = coneBeta(Mach, theta, gamma)
-outputbeta = Mach*theta + gamma; % placeholder for now
+% outputbeta = Mach*theta + gamma; % placeholder for now
 
 %% INPUTS %%
 
 % CHANGE TO USE THE FUNCTION INPUT
-M1 = 1.5;
+M1 = Mach;
 gamma = 1.4;
 
 % CHANGE TO USE THE FUNCTION INPUT
-theta_cone_input = 10; % *degrees
+theta_cone_input = theta; % *degrees
 
 % Use input M1, gamma to guess the shock angle.
 % Guess = if it were a wedge, not a cone
@@ -278,7 +277,7 @@ dydt = [dVr, dVt]';
 
 end
 
-
+error_function = 
 %% GEOMETRY %%
 
 v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;         % Now have dimensionless velocity immediately after shock assumed as wedge
@@ -298,25 +297,9 @@ thetaspan = [deg2rad(beta_i) , deg2rad(0.1)];              % Array spanning from
 Vt_vals = y(:,2);
 
 [~, idx] = min(abs(Vt_vals));
-theta_c_found = theta_out(idx);
+theta_solved = rad2deg(theta_out(idx));
 
-%% TESTING %%
-
-if y(2) == 0
-    theta_cone = theta_out;
-else
-end
-
-%%%%%%%%%%%%
-Results = zeros(1,3);
-
-if vt < 0
-    beta_i = beta_i + (beta_i/2);
-elseif vt > 0
-    beta_i = beta_i - (beta_i/2);
-else
-    zeros(1) = theta_cone_input;
-end
+outputbeta = beta(M1,theta_solved,gamma,0);
 
 end
 
