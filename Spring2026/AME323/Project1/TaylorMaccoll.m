@@ -228,14 +228,15 @@ function outputbeta = coneBeta(Mach, theta, gamma)
     %% 2. Initial Guess %%
     % Get an initial guess for the shock angle beta (assuming it's a wedge)
     % This provides a starting point for fzero
-    
-    beta_guess_i = beta(M1, theta_cone_input, gamma, 0); % degrees
+   
 
     %% 3. Shooting Method (The Fix) %%
     % fzero tries different beta values until the error is zero
     options = optimset('TolX', 1e-4); % Loosen the tolerance for performance
-    beta_low = asind(1/M1)+0.1;
-    beta_high = 89;
+
+    %beta_low = asind(1/M1)+0.1; % low-end guess
+    beta_low = asind(1/M1)+0.1; % low-end guess
+    beta_high = 89; % high-end guess (tee-hee)
 
     outputbeta = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), [beta_low beta_high]);
 
