@@ -272,11 +272,9 @@ function error = solve_for_theta(beta_guess, M1, gamma, target_theta)
     
     % 4. Return the difference between solved theta and target theta
     error = theta_solved - target_theta;
-<<<<<<< HEAD
 
 if theta_c_found > theta_cone
     
-=======
 end
 
 function dydt = taylormaccoll(theta, y, gamma)
@@ -291,5 +289,4 @@ function dydt = taylormaccoll(theta, y, gamma)
     dVt = numerator / denominator;
 
     dydt = [dVr; dVt];
->>>>>>> f6019c9b682e353bb741a0fa3109322d68a2f891
 end
