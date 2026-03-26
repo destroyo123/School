@@ -237,7 +237,7 @@ function outputbeta = coneBeta(Mach, theta, gamma)
     beta_low = asind(1/M1)+0.1;
     beta_high = 89;
 
-    outputbeta = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), [beta_low beta_high]);
+    [outputbeta, ~] = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input), [beta_low beta_high]);
 
 end % End of main function
 
