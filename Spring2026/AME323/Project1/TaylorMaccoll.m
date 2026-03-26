@@ -103,7 +103,6 @@ if plot1
     for i = 1:num_curves
         % Make a custon name "M = X.XX" for each curve and store for the legend
         name = "$$M = " + sprintf("%.2f", M_inputs(i))+"$$";
-        names(i) = name;
     
         % Grab the x 'θ' and y 'β' values
         x = theta_c; % Row vector of cone angles
@@ -229,7 +228,8 @@ function outputbeta = coneBeta(Mach, theta, gamma)
     %% 2. Initial Guess %%
     % Get an initial guess for the shock angle beta (assuming it's a wedge)
     % This provides a starting point for fzero
-    beta_guess_i = beta(M1, theta_cone_input, gamma, 0);
+    
+    beta_guess_i = beta(M1, theta_cone_input, gamma, 0); % degrees
 
     %% 3. Shooting Method (The Fix) %%
     % fzero tries different beta values until the error is zero
@@ -240,7 +240,7 @@ end % End of main function
 
 %% --- HELPER FUNCTIONS --- %%
 
-function error = solve_for_theta(beta_guess, M1, gamma, target_theta)
+function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
     % 1. Initial conditions at shock boundary (Dimensionless)
     beta_rad = deg2rad(beta_guess);
     
@@ -262,11 +262,11 @@ function error = solve_for_theta(beta_guess, M1, gamma, target_theta)
     % Solve the Taylor-Maccoll ODE using ODE45
     % but set the tolerances to be looser
     ode45options = odeset('RelTol', 1e-2, 'AbsTol', 1e-4);
-    [t_out, y_out] = ode45(@(t, y) taylormaccoll(t, y, gamma), tspan, y0, ode45options);
+    [theta_out, y_out] = ode45(@(t, y) taylormaccoll(t, y, gamma), tspan, y0, ode45options);
     
     
     % 3. Find where Vt crosses zero (the physical cone surface)
-    Vt_vals = y(:,2);
+    Vt_vals = y_out(:,2);
     
     % Find zero crossing
     idx = find(Vt_vals(1:end-1).*Vt_vals(2:end) < 0, 1);
@@ -278,15 +278,15 @@ function error = solve_for_theta(beta_guess, M1, gamma, target_theta)
     end
     
     if theta_found > theta_target
-        beta_low = beta_i;
+        beta_low = beta_rad;
     else
-        beta_high = beta_i;
+        beta_high = beta_rad;
     end
 
-    beta_sol = beta_i;
+    beta_sol = beta_rad;
     
     % 4. Return the difference between solved theta and target theta
-    error = theta_solved - target_theta;
+    error = theta_found - theta_target;
 
 function dydt = taylormaccoll(theta, y, gamma)
     Vr = y(1);
