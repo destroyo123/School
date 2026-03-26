@@ -59,6 +59,10 @@ theta_c = linspace(theta_c_min, theta_c_max, num_points); % 'x' coord values
 % Each column: The values of theta_c (see above definitions)
 beta_outputs = zeros(num_curves, num_points);
 
+for i = 1:num_curves
+    
+end
+
 
 %% Solving the System of Equations
 % Solves the system and logs the results.
@@ -161,22 +165,35 @@ end
 
 
 %% INPUTS %%
-M1 = [1.5, 2, 5];
-beta_i = deg2rad(40);         %initial guess for shock
-%already have gamma defined
+
+% CHANGE TO USE THE FUNCTION INPUT
+M1 = 1.5;
+
+% CHANGE TO USE THE FUNCTION INPUT
+theta_cone_input = 10; % *degrees
+
+% Use input M1, gamma to guess the shock angle.
+% Guess = if it were a wedge, not a cone
+% gamma defined already. That n=0 parameter finds the WEAK SHOCK case.
+beta_i = beta(M1,theta_cone_input,gamma,0);
 
 %% FOCUS ON M1(1) FIRST %%
 
-tcone = deltaFinder(M1(1), beta_i, gamma);       % Now have cone half angle assumed as wedge
+% Cone half angle assumed as wedge
+tcone = deltaFinder(M1, beta_i, gamma);
 
-M2 = obliqueMach(M1(1), beta_i, tcone, gamma);   % Now have Mach after shock assumed as wedge
+% Mach after shock assumed as wedge
+M2 = obliqueMach(M1, beta_i, tcone, gamma);
 
-dtcone = @(beta) ((deltaFinder(M1(1), beta+(1*10^-8), gamma)) - (deltaFinder(M1(1), beta-(1*10^-8), gamma)) ...
-    / (2*10^-8));                                 % Now have how theta cone changes with guessed beta
+% How theta cone changes with guessed beta
+dtcone = @(beta) ((deltaFinder(M1, beta+(1*10^-8), gamma)) - (deltaFinder(M1, beta-(1*10^-8), gamma)) ...
+    / (2*10^-8));
 
-beta_max = fsolve(dtcone, beta_i);                % Have maximum beta possible from given mach
+% Maximum beta possible from given mach
+beta_max = fsolve(dtcone, beta_i);
 
-tcone_max = deltaFinder(M1(1), beta_max, gamma);  % Have maximum wedge half angle from max beta
+% Maximum wedge half angle from max beta
+tcone_max = deltaFinder(M1, beta_max, gamma);
 
 
 
@@ -184,19 +201,19 @@ tcone_max = deltaFinder(M1(1), beta_max, gamma);  % Have maximum wedge half angl
 
 function dydt = taylormaccoll(theta, y, gamma)
 
-%convert into 1st order ODE
-%radial velocity
+% convert into 1st order ODE
+% radial velocity
 Vr = y(1);
-%equivalent to dV_r/d(theta)
+% equivalent to dV_r/d(theta)
 dVr = y(2); 
 
-%Derivative of y(2) equation as shown in notes
+% Derivative of y(2) equation as shown in notes
 numerator = ((gamma-1)/2)*(1-Vr^2-Vt^2)*(2*Vr+Vt*cot(theta))-(Vr*Vt^2);
 denominator = Vt^2-((gamma-1)/2)*(1-Vr^2-Vt^2);
 
 dy2dt = numerator / denominator;
 
-%Set up y-variable for ode45 as collumn
+% Set up y-variable for ode45 as collumn
 dydt = [dVr, dy2dt]';
 
 end

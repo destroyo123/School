@@ -45,7 +45,7 @@ M_inputs = [1.5, 2.0, 5.0];
 % Sets up system of θ, β, M, other crap.
 
 % number of curves to plot (same as number of mach inputs)
-N_curves = length(M_inputs);
+num_curves = length(M_inputs);
 
 % Range of theta_c (cone half-angle θ) input valves to plot
 theta_c_min = 1; % Left bound of the curve (degrees)
@@ -55,9 +55,13 @@ num_points = 200;
 theta_c = linspace(theta_c_min, theta_c_max, num_points); % 'x' coord values
 
 % Set up an empty array for the output β values
-% Row: one M input
-% Column: one value of theta_c (see above definitions)
-beta_outputs = zeros(num_points)
+% Each row: One M input
+% Each column: The values of theta_c (see above definitions)
+beta_outputs = zeros(num_curves, num_points);
+
+for i = 1:num_curves
+    
+end
 
 
 %% Solving the System of Equations
@@ -161,22 +165,30 @@ end
 
 
 %% INPUTS %%
-M1 = [1.5, 2, 5];
-beta_i = deg2rad(40);         %initial guess for shock
-%already have gamma defined
+
+% CHANGE TO USE THE FUNCTION INPUT
+M1 = 1.5;
+
+% CHANGE TO USE THE FUNCTION INPUT
+theta_cone_input = 10; % *degrees
+
+% Use input M1, gamma to guess the shock angle.
+% Guess = if it were a wedge, not a cone
+% gamma defined already. That n=0 parameter finds the WEAK SHOCK case.
+beta_i = beta(M1,theta_cone_input,gamma,0);
 
 %% FOCUS ON M1(1) FIRST %%
 
-tcone = deltaFinder(M1(1), beta_i, gamma);       % Now have cone half angle assumed as wedge
+tcone = deltaFinder(M1, beta_i, gamma);       % Now have cone half angle assumed as wedge
 
-M2 = obliqueMach(M1(1), beta_i, tcone, gamma);   % Now have Mach after shock assumed as wedge
+M2 = obliqueMach(M1, beta_i, tcone, gamma);   % Now have Mach after shock assumed as wedge
 
-dtcone = @(beta) ((deltaFinder(M1(1), beta+(1*10^-8), gamma)) - (deltaFinder(M1(1), beta-(1*10^-8), gamma)) ...
+dtcone = @(beta) ((deltaFinder(M1, beta+(1*10^-8), gamma)) - (deltaFinder(M1, beta-(1*10^-8), gamma)) ...
     / (2*10^-8));                                 % Now have how theta cone changes with guessed beta
 
 beta_max = fsolve(dtcone, beta_i);                % Have maximum beta possible from given mach
 
-tcone_max = deltaFinder(M1(1), beta_max, gamma);  % Have maximum wedge half angle from max beta
+tcone_max = deltaFinder(M1, beta_max, gamma);  % Have maximum wedge half angle from max beta
 
 
 
