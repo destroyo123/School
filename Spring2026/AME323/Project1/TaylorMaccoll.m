@@ -192,7 +192,7 @@ function delta = deltaFinder(M, beta, gamma)
     delta = atand(delta);
 end
 
-%%Broad Steps Needed%%
+%% Broad Steps Needed%%
 % 1. Assume is a wedge and get M2 and shock angle Beta (have functionsfor
 % them)
 % 2. Find V immediately after shock angle and break into r and theta components 
