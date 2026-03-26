@@ -246,50 +246,41 @@ end % End of main function
 
 function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
 
-    % 1. Initial conditions at shock boundary (Dimensionless)
     beta_rad = deg2rad(beta_guess);
-    
+    theta_rad = deg2rad(theta_target);
+
     delta = deltaFinder(M1, beta_guess, gamma);
     M2 = obliqueMach(M1, beta_guess, delta, gamma);
 
-    % V_prime is the velocity magnitude normalized by V_max
-    V_prime = ( (2 / ((gamma - 1) * M2^2)) + 1 )^-0.5;
+    V_prime = ((2 / ((gamma - 1) * M2^2)) + 1)^-0.5;
 
-    % Density ratio across the shock
-    M1n2 = (M1 * sin(beta_rad))^2;
-    
-    theta_rad = deg2rad(theta_target); % Bookkeeping teehee
-    beta_rad = deg2rad(beta_guess);
+    vr0 =  V_prime * cos(beta_rad - theta_rad);
+    vt0 = -V_prime * sin(beta_rad - theta_rad); % NOTE: Vt should be negative here
 
-    % Initial velocity components (Vr and Vt)
-    vr0 = V_prime * cos(beta_rad-theta_rad); 
-    vt0 = V_prime  * sin(beta_rad-theta_rad); 
-
-    % 2. Integrate ODE from shock (beta) down toward axis (0)
     y0 = [vr0; vt0];
-    tspan = [beta_rad, deg2rad(0.1)];
-    
-    % Solve the Taylor-Maccoll ODE using ODE45
-    % but set the tolerances to be looser
-    ode45options = odeset('RelTol', 1e-2, 'AbsTol', 1e-4);
+    tspan = [beta_rad, deg2rad(0.5)];
+
+    ode45options = odeset('RelTol', 1e-6, 'AbsTol', 1e-8);
     [theta_out, y_out] = ode45(@(t, y) taylormaccoll(t, y, gamma), tspan, y0, ode45options);
-    
-    
-    % 3. Find where Vt crosses zero (the physical cone surface)
-    Vt_vals = y_out(:,2);
-    
-    % Find zero crossing
-    idx = find(Vt_vals(1:end-1).*Vt_vals(2:end) < 0, 1);
-    
+
+    Vt_vals = y_out(:, 2);
+
+    % Find sign change with linear interpolation
+    idx = find(Vt_vals(1:end-1) .* Vt_vals(2:end) < 0, 1);
+
     if isempty(idx)
-        theta_found = theta_out(end);
+        % No crossing found: return a large signed error based on
+        % whether Vt stayed positive or negative the whole time.
+        % This preserves sign information so fzero can bracket.
+        error = Vt_vals(end) * 1000;
     else
-        theta_found = theta_out(idx);
+        % Linearly interpolate to find precise theta where Vt = 0
+        t1 = theta_out(idx);   t2 = theta_out(idx+1);
+        v1 = Vt_vals(idx);     v2 = Vt_vals(idx+1);
+        theta_found = t1 - v1 * (t2 - t1) / (v2 - v1);
+
+        error = theta_found - theta_rad;
     end
-    
-    % 4. Return the difference between solved theta and target theta
-    % except note that theta_target is input in degrees.
-    error = theta_found - deg2rad(theta_target); % Outputs radians
 end
 
 function dydt = taylormaccoll(theta, y, gamma)
