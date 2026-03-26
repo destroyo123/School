@@ -42,7 +42,7 @@ T_amb = 288.15; % Std sea level temeprature is 273.15 Kelvin?
 M_inputs = [1.5, 2.0, 5.0];
 
 %% Setting Up the System of Equations
-% Setmks up the functions of θ, β, M, other crap (is this actually what we wanna do?)
+% Sets up the functions of θ, β, M, other crap (is this actually what we wanna do?)
 
 %% Solving the System of Equations
 % Solves the system and logs the results.
@@ -53,44 +53,6 @@ M_inputs = [1.5, 2.0, 5.0];
 %% Functions Used
 % Below is a set of functions used, based on lectures, NASA, and other
 % sources
-
-%%
-% *Prantl-Meyer Angle "nu"* 
-% 
-% *Inputs:* 
-%
-% * Local flow mach number 'M'
-% * Local flow ratio of specific heats 'gamma' (usually 1.4)
-% 
-% 
-% *Outputs:* 
-%
-%
-% * Prandtl-Meyer angle "nu", in degrees.
-%
-
-function prandtlMeyerAngle = nu(M, gamma)
-    prandtlMeyerAngle = sqrt((gamma+1)/(gamma-1)) * atand(sqrt(((gamma-1)/(gamma+1))*(M.^2 - 1))) - atand(sqrt(M.^2 - 1));
-end
-
-%%
-% *Oblique Shock Pressure Ratio* 
-% 
-% *Inputs:*
-%
-% * Unperturbed Mach 'M' (often notated as 'M1' in diagrams)
-% * Local ratio of specific heats 'gamma'
-% * Oblique shock angle 'beta'
-%
-% 
-% *Outputs:*
-%
-%
-% * Oblique-shock pressure ratio
-%
-function pressureRatio = obliquePR(M, gamma, beta)
-    pressureRatio = 1 + ( (2*gamma)/( gamma+1 ) * ( (M^2) * (sind(beta)^2) - 1 ) );
-end
 
 
 %%
@@ -153,24 +115,6 @@ function Beta=beta(M,theta,gamma,n)
     %}
 end
 
-%% DON'T NEED RIGHT?? %%
-% *Mach from prandtl-meyer angle (IN DEGREES)*
-% 
-% *Inputs:*
-%
-%
-% * Ratio of specific heats "gamma" of flow, usually 1.4
-% * Prandtl-Meyer angle "nu" (degrees)
-% 
-% *Outputs:*
-%
-% * Local mach number "mach"
-%
-
-function mach = meyerMach(gamma, nu)
-    mach = flowprandtlmeyer(gamma, nu, 'nu');
-end
-
 %%
 % *Find delta when given M and beta (degrees)*
 % 
@@ -192,7 +136,7 @@ function delta = deltaFinder(M, beta, gamma)
     delta = atand(delta);
 end
 
-%%Broad Steps Needed%%
+%% Broad Steps Needed%%
 % 1. Assume is a wedge and get M2 and shock angle Beta (have functionsfor
 % them)
 % 2. Find V immediately after shock angle and break into r and theta components 
@@ -213,14 +157,9 @@ M2 = obliqueMach(M1(1), beta_i, tcone, gamma);   % Now have Mach after shock ass
 dtcone = @(beta) ((deltaFinder(M1(1), beta+(1*10^-8), gamma)) - (deltaFinder(M1(1), beta-(1*10^-8), gamma)) ...
     / (2*10^-8));                                 % Now have how theta cone changes with guessed beta
 beta_max = fsolve(dtcone, beta_i);                % Have maximum beta possible from given mach
-tcone_max = deltaFinder(M1(1), beta_max, gamma);  % Ha
+tcone_max = deltaFinder(M1(1), beta_max, gamma);  % Have maximum wedge half angle from max beta
 
-%% MIGHT NOT NEED BC GEOMETRIC APPROACH %%
 
-v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;         % Now have velocity immediately after shock assumed as wedge
-
-vr = v_after * cos(beta_i-tcone);                % Radial component
-vt = sqrt(v_after^2 - vr^2);                     % Theta component
 %%%%%%%%%%%%%%%%%%
 
 %% TESTING %%
@@ -258,9 +197,19 @@ dydt = [dVr, dy2dt]';
 
 end
 
-%%%%%%%%%%%%%%%%
 
+%% GEOMETRY %%
 
+v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;         % Now have dimensionless velocity immediately after shock assumed as wedge
+
+vr = v_after * cos(beta_i-tcone);                % Max radial component
+vt = v_after * sin(beta_i-tcone);                % Max theta component
+
+%% INITIAL CONDITIONS %%
+
+vr0 = 
+
+y0 = 
 
 
 
