@@ -177,7 +177,7 @@ theta_cone_input = 10; % *degrees
 % gamma defined already. That n=0 parameter finds the WEAK SHOCK case.
 beta_i = beta(M1,theta_cone_input,gamma,0);
 
-%% FOCUS ON M1(1) FIRST %%
+%% FOCUS ON M1 FIRST %%
 
 % Cone half angle assumed as wedge
 tcone = deltaFinder(M1, beta_i, gamma);
