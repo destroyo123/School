@@ -287,7 +287,6 @@ end
 % Calculates error between the expected (input) theta_c
 % and the theta_c from our beta guess, which is found by ode45()
 
-<<<<<<< HEAD
 function error = solve_for_theta(beta_guess, M1, gamma, target_theta)
     % 1. Initial conditions at shock boundary (Dimensionless)
     beta_rad = deg2rad(beta_guess);
@@ -300,7 +299,7 @@ function error = solve_for_theta(beta_guess, M1, gamma, target_theta)
     V_max_inv = ( (2/((gamma-1)*M1^2)) + 1 )^-0.5;
     vr0 = V_max_inv * cos(beta_rad);
     vt0 = -V_max_inv * eps * sin(beta_rad); 
-=======
+
 vr = v_after * cos(deg2rad(beta_i)-deg2rad(theta_cone_input));                % Radial component
 vt = v_after * sin(deg2rad(beta_i)-deg2rad(theta_cone_input));                % Theta component
 
@@ -315,16 +314,13 @@ thetaspan = [deg2rad(beta_i) , deg2rad(0.1)];              % Array spanning from
 
 Vt_vals = y(:,2);
 
-<<<<<<< HEAD
 if y(end,2) < 1*10^-4
     theta_cone = theta_out(end);
 else
 end
 
-=======
 [~, idx] = min(abs(Vt_vals));
 theta_c_found = theta_out(idx);
->>>>>>> af7e5da702daecf627b0b084d3792135ca33471b
 
     % 2. Integrate ODE from shock (beta) down toward axis
     y0 = [vr0, vt0];
@@ -337,9 +333,3 @@ theta_c_found = theta_out(idx);
     % 4. Return the error (fzero wants this to be 0)
     error = theta_solved - target_theta;
 end
-
-
-
->>>>>>> 0b0c76cebb388bb1ed594c12c2046d6b46eb0815
-
-
