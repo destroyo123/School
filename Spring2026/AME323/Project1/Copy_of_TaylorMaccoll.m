@@ -48,9 +48,9 @@ M_inputs = [1.5, 2.0, 5.0];
 num_curves = length(M_inputs);
 
 % Range of theta_c (cone half-angle θ) input valves to plot
-theta_c_min = 1; % Left bound of the curve (degrees)
-theta_c_max = 10; % Right bound of the curve (degrees)
-num_points = 200;
+theta_c_min = 0.5; % Left bound of the curve (degrees)
+theta_c_max = 60; % Right bound of the curve (degrees)
+num_points = 50;
 
 theta_c = linspace(theta_c_min, theta_c_max, num_points); % 'x' coord values
 
@@ -59,8 +59,21 @@ theta_c = linspace(theta_c_min, theta_c_max, num_points); % 'x' coord values
 % Each column: The values of theta_c (see above definitions)
 beta_outputs = zeros(num_curves, num_points);
 
+% Finds the cone shock angles given the above-defined M, θ inputs.
 for i = 1:num_curves
     
+    % For each row (M value), run the beta, point-by point.
+    % HORRIBLY inefficient, but we just need it to work first.
+    for j = 1:num_points
+
+        % Grab the input
+        freestream_mach = M_inputs(i);
+        cone_angle = theta_c(i,j);
+
+        % Store the Output
+        beta_outputs(i,j) = coneBeta();
+
+    end
 end
 
 
@@ -68,7 +81,55 @@ end
 % Solves the system and logs the results.
 
 %% Plotting
-% This is where the required plots are generated.
+% This is where all plots are generated.
+
+% Set interpereter to Latex. Lets us use subscripts and greek characters.
+set(groot, 'defaultTextInterpreter', 'latex');
+set(groot, 'defaultAxesTickLabelInterpreter', 'latex');
+set(groot, 'defaultLegendInterpreter', 'latex');
+
+plot1 = true; % Toggle this plot on/off
+if plot1
+    fig1 = figure;
+    ax1 = gca;
+    
+    % Text format
+    lineWidth = 1.25;
+    axisFontSize = 18;
+    legendFontSize = 14;
+    hold on;
+    
+    colors = ['r', 'g', 'b']; % colors to cycle through
+    names = zeros(1,num_curves);
+    for i = 1:num_curves
+        % Make a custon name "M = X.XX" for each curve and store for the legend
+        name = "$$M = " + compose("%.2f", value)+"$$";
+        names(i) = name;
+    
+        % Grab the x 'θ' and y 'β' values
+        x = theta_c; % Row vector of cone angles
+        y = beta_outputs(i); % Row vector of shock angles
+    
+        % Cycle through the colors (however many colors are defined)
+        color = colors(mod(i,length(colors))+1);
+        
+        % Plot the given curve, including the name (referenced in legend)
+        plot(x, y, "LineWidth", lineWidth, "Color", color, DisplayName=name);
+    end
+    
+    grid on;
+    
+    % Put the legend and axis labels
+    legend(FontSize=legendFontSize,Location="northwest");
+    xlabel("$\theta_{cone}$", fontsize = axisFontSize);
+    ylabel(names, FontSize = axisFontSize);
+    
+    % Sets axes at origin.
+    ax1.XAxisLocation = 'origin';
+    ax1.YAxisLocation = 'origin';
+    
+    hold off; % Done with plot :)
+end
 
 %% Functions Used
 % Below is a set of functions used, based on lectures, NASA, and other
@@ -160,7 +221,7 @@ end
 % 1. Assume is a wedge and get M2 and shock angle Beta (have functionsfor
 % them)
 % 2. Find V immediately after shock angle and break into r and theta components 
-% 3. Want to find V_theta =0 for BC
+% 3. Want to find V_theta = 0 for BC
 
 
 
@@ -168,7 +229,6 @@ end
 
 % CHANGE TO USE THE FUNCTION INPUT
 M1 = 1.5;
-gamma = 1.4;
 
 % CHANGE TO USE THE FUNCTION INPUT
 theta_cone_input = 10; % *degrees
@@ -178,7 +238,7 @@ theta_cone_input = 10; % *degrees
 % gamma defined already. That n=0 parameter finds the WEAK SHOCK case.
 beta_i = beta(M1,theta_cone_input,gamma,0);
 
-%% FOCUS ON M1(1) FIRST %%
+%% FOCUS ON M1 FIRST %%
 
 % Cone half angle assumed as wedge
 tcone = deltaFinder(M1, beta_i, gamma);
@@ -206,17 +266,16 @@ function dydt = taylormaccoll(theta, y, gamma)
 % radial velocity
 Vr = y(1);
 % equivalent to dV_r/d(theta)
-Vt = y(2); 
-dVr = Vt;
+dVr = y(2); 
 
 % Derivative of y(2) equation as shown in notes
 numerator = ((gamma-1)/2)*(1-Vr^2-Vt^2)*(2*Vr+Vt*cot(theta))-(Vr*Vt^2);
 denominator = Vt^2-((gamma-1)/2)*(1-Vr^2-Vt^2);
 
-dVt = numerator / denominator;
+dy2dt = numerator / denominator;
 
 % Set up y-variable for ode45 as collumn
-dydt = [dVr, dVt]';
+dydt = [dVr, dy2dt]';
 
 end
 
@@ -225,13 +284,13 @@ end
 
 v_after = ((2/((gamma-1)*M2^2))+1)^-0.5;         % Now have dimensionless velocity immediately after shock assumed as wedge
 
-vr = v_after * cosd(beta_i-tcone);                % Radial component
-vt = v_after * sind(beta_i-tcone);                % Theta component
+vr = v_after * cos(beta_max-tcone_max);                % Max radial component
+vt = v_after * sin(beta_max-tcone_max);                % Max theta component
 
 %% INITIAL CONDITIONS %%
 
-y0 = [vr, vt];                                             % Initial Vr and Vtheta with maximum conditions
-thetaspan = [deg2rad(beta_i) , deg2rad(0.1)];              % Array spanning from maximum wedge deflection in degrees 
+y0 = [vr, vt];                              % Initial Vr and Vtheta with maximum conditions
+thetaspan = [tcone_max , deg2rad(4)];       % Array spanning from maximum wedge deflection to 
 
 %% ODE45 TIME %%
 
