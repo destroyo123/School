@@ -6,21 +6,21 @@
 % So this program is gonna do XYZ 
 % by doing XYZ
 % 
-% 
-% and you can reference it like TaylorMaccol(parameter1, parameter2, etc...)
-% No idea if this is how they want it but probably.
-% 
-% Test Inline LaTeX format: $x^2+e^{\pi i}$ 
-% Test block of LaTeX: 
-% 
-% $$e^{\pi i} + 1 = 0$$
-% 
+% Takes initial guess of beta (uses the wedge case), then uses ode45 to
+% work backwards using the Taylor Maccoll equation to find a rough value of
+% cone half-angle from that guess. Then, uses fzero() to repeat that
+% process until there is zero error between the reverse-engineered cone
+% half-angle and the input half-angle (they're the same now). Yay! Now that
+% initial beta guess where fzero() found zero error is your conical oblique
+% shock angle. Congratulations!
 % 
 % 
-% Bottom text lol <3
+% 
+% 
+% 
 
 %% Housekeeping:
-% Requires having the Aerospace Toolbox installed for certain functions
+% Requires having the a few toolboxes installed for certain functions
 
 % Clear old variable values, outputs, and close old figures
 close all;
