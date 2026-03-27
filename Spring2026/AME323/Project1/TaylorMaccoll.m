@@ -3,8 +3,6 @@
 %%
 % *Date:* 3-27-26
 %% Description:
-% So this program is gonna do XYZ 
-% by doing XYZ
 % 
 % Takes initial guess of beta (uses the wedge case), then uses ode45 to
 % work backwards using the Taylor Maccoll equation to find a rough value of
@@ -93,12 +91,27 @@ end
 %% Plotting
 % This is where all plots are generated.
 
+% UofA colors!
+arizonaBlue = [12, 35, 75] ./ 255;
+arizonaRed = [171, 5, 32] ./ 255;
+midnight = [0, 28, 72] ./ 255;
+azurite = [30,82,136] ./ 255;
+oasis = [55, 141, 189] ./ 255;
+chili = [139, 0, 21] ./ 255;
+bloom = [239, 64, 86] ./255;
+sky = [192,211,235] ./255;
+leaf = [112, 184, 101] ./255;
+river = [0, 125, 132] ./255;
+mesa = [169, 92, 66] ./255;
+
 % Set interpereter to Latex. Lets us use subscripts and greek characters.
 set(groot, 'defaultTextInterpreter', 'latex');
 set(groot, 'defaultAxesTickLabelInterpreter', 'latex');
 set(groot, 'defaultLegendInterpreter', 'latex');
 
-plot1 = true; % Toggle this plot on/off
+colors = {azurite, bloom, leaf}; % colors to cycle through
+
+plot1 = false; % Toggle this plot on/off
 if plot1
     fig1 = figure;
     ax1 = gca;
@@ -109,7 +122,6 @@ if plot1
     legendFontSize = 16;
     hold on;
     
-    colors = ['r', 'g', 'b']; % colors to cycle through
     for i = 1:num_curves
         % Make a custon name "M = X.XX" for each curve and store for the legend
         name = "$M = " + sprintf("%.2f", M_inputs(i))+"$ (cone)";
@@ -121,7 +133,7 @@ if plot1
         y_wedge = beta_wedge_outputs(i,:); % Same but wedge
     
         % Cycle through the colors (however many colors are defined)
-        color = colors(mod(i-1,length(colors))+1);
+        color = colors{mod(i-1,length(colors))+1};
         
         % Plot the given curve, including the name (referenced in legend)
         plot(x, y, "LineWidth", lineWidth, "Color", color, DisplayName=name);
@@ -143,6 +155,203 @@ if plot1
     ax1.YAxisLocation = 'origin';
     
     hold off; % Done with plot :)
+end
+
+% Plot for PDF (8.5x11 inch paper size & PDF export)
+plot2 = true; 
+if plot2
+
+    % 1. Create figure and force the "Paper" properties
+    fig2 = figure('Units', 'inches', 'Position', [0, 0, 8.5, 11], 'Visible', 'on');
+    
+    % Force the PDF output size to be exactly 8.5x11
+    set(fig2, 'PaperUnits', 'inches');
+    set(fig2, 'PaperSize', [8.5 11]);
+    
+    % Sets the "Drawing Area" to be 7.5x10, centered (0.5" margins)
+    % Format: [Left, Bottom, Width, Height]
+    set(fig2, 'PaperPosition', [0.5 0.5 7.5 10]);
+    set(fig2, 'PaperPositionMode', 'manual');
+
+    ax2 = axes(fig2);
+    hold(ax2, 'on');
+    
+    % Formatting
+    lineWidth2 = 2.0;
+    axisFontSize2 = 24; 
+    legendFontSize2 = 16;
+    
+    titlecolor = arizonaBlue;
+    axistextcolor = arizonaBlue;
+
+    for i = 1:num_curves
+        name = "$M = " + sprintf("%.2f", M_inputs(i))+"$ (cone)";
+        name2 = "$M = " + sprintf("%.2f", M_inputs(i))+"$ (wedge)";
+        color = colors{mod(i-1,length(colors))+1};
+        
+        plot(ax2, theta_c, beta_outputs(i,:), 'LineWidth', lineWidth2, 'Color', color, 'DisplayName', name);
+        plot(ax2, theta_c, beta_wedge_outputs(i,:), 'LineWidth', lineWidth2-0.5, 'Color', color, 'LineStyle', '--', 'DisplayName', name2);
+    end
+    
+    % Style
+    grid(ax2, 'on');
+    legend(ax2, 'FontSize', legendFontSize2, 'Location', 'southeast');
+    xlabel(ax2, "Half-angle, $\theta$", 'FontSize', axisFontSize2, 'Color', axistextcolor);
+    ylabel(ax2, "Oblique shock angle, $\beta$", 'FontSize', axisFontSize2, 'Color', axistextcolor);
+    title(ax2, "Conical Shock angle $\beta_c$ vs half-angle $\theta_c$", 'Color', titlecolor);
+    
+    set(ax2, 'FontSize', 14);
+    ylim(ax2, [0, 75]);
+    xlim(ax2, [0, 55]);
+    ax2.XAxisLocation = 'origin';
+    ax2.YAxisLocation = 'origin';
+    
+    % 2. Export using 'print' instead of 'exportgraphics'
+    % This respects the PaperSize and PaperPosition settings exactly.
+    print(fig2, 'fullpage-plot.pdf', '-dpdf', '-bestfit');
+    
+    hold(ax2, 'off');
+end
+
+
+
+%% Solving the Taylor-Maccoll Equations
+% find the output conical shock angle β given an input M, θ (A.K.A δ), and
+% γ.
+%
+%
+% # Assume is a wedge and get M2 and shock angle Beta (have functionsfor
+% them)
+% # Find V immediately after shock angle and break into r and theta components 
+% # Want to find V_theta = 0 for BC
+%
+%
+
+function outputbeta = coneBeta(Mach, theta, gamma)
+    % 1. Setup Inputs
+    M1 = Mach;
+    theta_cone_input = theta; % degrees
+
+    % 2. Initial Guess
+    % Get an initial guess for the shock angle beta (assuming it's a wedge)
+    % This provides a starting point for fzero
+   
+
+    % 3. Shooting Method
+    % fzero tries different beta values until the error is zero
+    options = optimset('TolX', 1e-4); % Loosen the tolerance for performance
+
+    beta_vals = linspace(asind(1/M1)+0.5, 75, 20);
+    errors = zeros(size(beta_vals));
+
+    for k = 1:length(beta_vals)
+        errors(k) = solve_for_theta(beta_vals(k), M1, gamma, theta_cone_input);
+    end
+
+    % Find sign change
+    idx = find(errors(1:end-1).*errors(2:end) < 0, 1);
+
+    if isempty(idx)
+        outputbeta = NaN; % no solution
+        return;
+    end
+
+    beta_low = beta_vals(idx);
+    beta_high = beta_vals(idx+1);
+
+    outputbeta = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input),[beta_low beta_high]);
+
+end % End of main function
+
+%% Taylor-Maccoll HELPER FUNCTIONS
+% Various functions used as part of the process of finding the cone shock angle.
+%%
+% *Find corresponding wedge θ for a given conical θ*
+% 
+% *Inputs:*
+%
+%
+% * Guess of conical oblique shock angle 'beta_guess' (degrees)
+% * Unperturbed Mach (M1)
+% * Ratio of specific heats, 'gamma' of flow, usually 1.4
+% * Given conical half-angle 'theta_target' (degrees)
+% 
+% *Outputs:*
+%
+% * Difference between the corresponding θ from the guessed  β, and the
+% target θ given. (=0 when the β guess is the correct conical oblique shock)
+%
+function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
+
+    theta_rad = deg2rad(theta_target);
+    delta = deltaFinder(M1, beta_guess, gamma);
+
+    beta_rad = deg2rad(beta_guess);
+    delta_rad = deg2rad(delta);
+
+    M2 = obliqueMach(M1, beta_guess, delta, gamma);
+
+    V_prime = ((2 / ((gamma - 1) * M2^2)) + 1)^-0.5;
+
+    vr0 =  V_prime * cos(beta_rad - delta_rad);
+    vt0 = -V_prime * sin(beta_rad - delta_rad); % NOTE: Vt should be negative here
+
+    y0 = [vr0; vt0];
+    tspan = [beta_rad, deg2rad(2)];
+
+    ode45options = odeset('RelTol', 1e-3, 'AbsTol', 1e-5);
+    [theta_out, y_out] = ode45(@(t, y) taylormaccoll(t, y, gamma), tspan, y0, ode45options);
+
+    Vt_vals = y_out(:, 2);
+
+    % Find sign change with linear interpolation
+    idx = find(Vt_vals(1:end-1) .* Vt_vals(2:end) < 0, 1);
+
+    if isempty(idx)
+        % No crossing found: return a large signed error based on
+        % whether Vt stayed positive or negative the whole time.
+        % This preserves sign information so fzero can bracket.
+        error = Vt_vals(end) * 1000;
+    else
+        % Linearly interpolate to find precise theta where Vt = 0
+        t1 = theta_out(idx);   t2 = theta_out(idx+1);
+        v1 = Vt_vals(idx);     v2 = Vt_vals(idx+1);
+        theta_found = t1 - v1 * (t2 - t1) / (v2 - v1);
+
+        error = theta_found - theta_rad;
+    end
+end
+
+%%
+% *Taylor-Mccoll equation itself*
+% 
+% *Inputs:*
+%
+%
+% * Cone half-angle 'theta' (degrees)
+% * Vector of velocity components [radial direction, angular direction] 'y'
+% * Ratio of specific heats, 'gamma' of flow, usually 1.4
+% 
+% *Outputs:*
+%
+% * Numeric derivatives of velocity in the r, θ direction.
+%
+function dydt = taylormaccoll(theta, y, gamma)
+    Vr = y(1);
+    Vt = y(2); 
+
+    % The Taylor-Maccoll Equation
+    numerator = ((gamma-1)/2)*(1-Vr^2-Vt^2)*(2*Vr+Vt*cot(theta))-(Vr*Vt^2);
+    denominator = Vt^2-((gamma-1)/2)*(1-Vr^2-Vt^2);
+    if abs(denominator) < 1e-6
+    denominator = sign(denominator)*1e-6;
+    end
+
+    dVr = Vt;
+    dVt = numerator / denominator;
+
+    dydt = [dVr; dVt];
+
 end
 
 %% Generic Helper Functions
@@ -264,143 +473,4 @@ function delta = deltaFinder(M, beta, gamma)
     delta = ( ( M^2 * (sind(beta)^2) ) - 1) / ( M^2 * (gamma + cosd(2*beta)) + 2 );
     delta = 2*cotd(beta)*delta;
     delta = atand(delta);
-end
-
-%% Solving the Taylor-Maccoll Equations
-% find the output conical shock angle β given an input M, θ (A.K.A δ), and
-% γ.
-%
-%
-% # Assume is a wedge and get M2 and shock angle Beta (have functionsfor
-% them)
-% # Find V immediately after shock angle and break into r and theta components 
-% # Want to find V_theta = 0 for BC
-%
-%
-
-function outputbeta = coneBeta(Mach, theta, gamma)
-    % 1. Setup Inputs
-    M1 = Mach;
-    theta_cone_input = theta; % degrees
-
-    % 2. Initial Guess
-    % Get an initial guess for the shock angle beta (assuming it's a wedge)
-    % This provides a starting point for fzero
-   
-
-    % 3. Shooting Method
-    % fzero tries different beta values until the error is zero
-    options = optimset('TolX', 1e-4); % Loosen the tolerance for performance
-
-    beta_vals = linspace(asind(1/M1)+0.5, 75, 20);
-    errors = zeros(size(beta_vals));
-
-    for k = 1:length(beta_vals)
-        errors(k) = solve_for_theta(beta_vals(k), M1, gamma, theta_cone_input);
-    end
-
-    % Find sign change
-    idx = find(errors(1:end-1).*errors(2:end) < 0, 1);
-
-    if isempty(idx)
-        outputbeta = NaN; % no solution
-        return;
-    end
-
-    beta_low = beta_vals(idx);
-    beta_high = beta_vals(idx+1);
-
-    outputbeta = fzero(@(b) solve_for_theta(b, M1, gamma, theta_cone_input),[beta_low beta_high]);
-
-end % End of main function
-
-%% Taylor-Maccoll HELPER FUNCTIONS
-
-%%
-% *Find corresponding wedge θ for a given conical θ*
-% 
-% *Inputs:*
-%
-%
-% * Guess of conical oblique shock angle 'beta_guess' (degrees)
-% * Unperturbed Mach (M1)
-% * Ratio of specific heats, 'gamma' of flow, usually 1.4
-% * Given conical half-angle 'theta_target' (degrees)
-% 
-% *Outputs:*
-%
-% * Difference between the corresponding θ from the guessed  β, and the
-% target θ given. (=0 when the β guess is the correct conical oblique shock)
-%
-function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
-
-    theta_rad = deg2rad(theta_target);
-    delta = deltaFinder(M1, beta_guess, gamma);
-
-    beta_rad = deg2rad(beta_guess);
-    delta_rad = deg2rad(delta);
-
-    M2 = obliqueMach(M1, beta_guess, delta, gamma);
-
-    V_prime = ((2 / ((gamma - 1) * M2^2)) + 1)^-0.5;
-
-    vr0 =  V_prime * cos(beta_rad - delta_rad);
-    vt0 = -V_prime * sin(beta_rad - delta_rad); % NOTE: Vt should be negative here
-
-    y0 = [vr0; vt0];
-    tspan = [beta_rad, deg2rad(2)];
-
-    ode45options = odeset('RelTol', 1e-3, 'AbsTol', 1e-5);
-    [theta_out, y_out] = ode45(@(t, y) taylormaccoll(t, y, gamma), tspan, y0, ode45options);
-
-    Vt_vals = y_out(:, 2);
-
-    % Find sign change with linear interpolation
-    idx = find(Vt_vals(1:end-1) .* Vt_vals(2:end) < 0, 1);
-
-    if isempty(idx)
-        % No crossing found: return a large signed error based on
-        % whether Vt stayed positive or negative the whole time.
-        % This preserves sign information so fzero can bracket.
-        error = Vt_vals(end) * 1000;
-    else
-        % Linearly interpolate to find precise theta where Vt = 0
-        t1 = theta_out(idx);   t2 = theta_out(idx+1);
-        v1 = Vt_vals(idx);     v2 = Vt_vals(idx+1);
-        theta_found = t1 - v1 * (t2 - t1) / (v2 - v1);
-
-        error = theta_found - theta_rad;
-    end
-end
-
-%%
-% *Taylor-Mccoll equation itself*
-% 
-% *Inputs:*
-%
-%
-% * Cone half-angle 'theta' (degrees)
-% * Vector of velocity components [radial direction, angular direction] 'y'
-% * Ratio of specific heats, 'gamma' of flow, usually 1.4
-% 
-% *Outputs:*
-%
-% * Numeric derivatives of velocity in the r, θ direction.
-%
-function dydt = taylormaccoll(theta, y, gamma)
-    Vr = y(1);
-    Vt = y(2); 
-
-    % The Taylor-Maccoll Equation
-    numerator = ((gamma-1)/2)*(1-Vr^2-Vt^2)*(2*Vr+Vt*cot(theta))-(Vr*Vt^2);
-    denominator = Vt^2-((gamma-1)/2)*(1-Vr^2-Vt^2);
-    if abs(denominator) < 1e-6
-    denominator = sign(denominator)*1e-6;
-    end
-
-    dVr = Vt;
-    dVt = numerator / denominator;
-
-    dydt = [dVr; dVt];
-
 end
