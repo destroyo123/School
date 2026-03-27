@@ -30,13 +30,7 @@ clc;
 %% Given Values:
 % Known relationships, and input parameters.
 
-% Atmospheric Assumptions:
-R_universal =  8.314; % J/(mol K ) Universal gas constant "R"
-R_air = 287; % J/(kg-degreeK) Specific gas constant for air "R_air"
 gamma = 1.4; % Ratio of specific heats for standard air
-rho_amb = 1.225; % Air density kg/m^3
-p_amb = 1; % 1 atm? Dunno enough to know what unit we want yet I guess
-T_amb = 288.15; % Std sea level temeprature is 273.15 Kelvin?
 
 % The given mach values for which we need to generate curves:
 M_inputs = [1.5, 2.0, 5.0];
@@ -65,13 +59,13 @@ beta_wedge_outputs = NaN(num_curves, num_points);
 
 
 %% Solving the System of Equations
-% Solves the system and logs the results.
-thetabounds = 50;
+% Solves the system and logs the results. Uses other functions to do the
+% math.
 % Finds the cone shock angles given the above-defined M, θ inputs.
 for i = 1:num_curves
     freestream_mach = M_inputs(i);
 
-    [max_thetas, max_betas] = maxWedgeBeta(freestream_mach,thetabounds,gamma);
+    [max_thetas, max_betas] = maxWedgeBeta(freestream_mach,gamma);
 
     % For each row (M value), run the beta, point-by point.
     % HORRIBLY inefficient, but we just need it to work first.
@@ -151,9 +145,9 @@ if plot1
     hold off; % Done with plot :)
 end
 
-%% Functions Used
+%% Generic Helper Functions
 % Below is a set of functions used, based on lectures, NASA, and other
-% sources
+% sources. Mainly just given flow relations for known cases.
 
 %%
 % *Oblique shock resultant Mach*
@@ -218,16 +212,34 @@ function Beta=beta(M,theta,gamma,n)
     %}
 end
 
-function [maxTheta, maxBeta] = maxWedgeBeta(M, thetabounds, gamma)
+
+%%
+% *Find max wedge shock angle for a given mach*
+% 
+%
+% *Inputs:*
+%
+% * Unperturbed mach "M" (AKA 'M1' in most notation),
+% * ratio of specific heats "gamma" of the flow,
+%
+% 
+% *Outputs:*
+%
+% * Max weak shock angle "beta" in degrees.
+% * Half-angle "theta" for this max oblique shock angle, in degrees.
+%
+%
+%
+function [maxTheta, maxBeta] = maxWedgeBeta(M, gamma)
 
 t = @(b) deltaFinder(M, b, gamma);
 eps = 1e-7;
 
 dtdb = @(b) (t(b+eps) - t(b-eps))/(2*eps);
 
-% Use a guess for Beta, not Theta. 
+% Use a guess for Beta
 % 65 degrees is a safe starting point for most supersonic Mach numbers.
-maxBeta = fzero(dtdb, 65); 
+maxBeta = fzero(dtdb, 65);  % guess 65 degrees at first
 maxTheta = deltaFinder(M, maxBeta, gamma);
 
 end
@@ -254,27 +266,32 @@ function delta = deltaFinder(M, beta, gamma)
     delta = atand(delta);
 end
 
-%% Broad Steps Needed%%
-% 1. Assume is a wedge and get M2 and shock angle Beta (have functionsfor
+%% Solving the Taylor-Maccoll Equations
+% find the output conical shock angle β given an input M, θ (A.K.A δ), and
+% γ.
+%
+%
+% # Assume is a wedge and get M2 and shock angle Beta (have functionsfor
 % them)
-% 2. Find V immediately after shock angle and break into r and theta components 
-% 3. Want to find V_theta = 0 for BC
+% # Find V immediately after shock angle and break into r and theta components 
+% # Want to find V_theta = 0 for BC
+%
+%
 
 function outputbeta = coneBeta(Mach, theta, gamma)
-    %% 1. Setup Inputs %%
+    % 1. Setup Inputs
     M1 = Mach;
     theta_cone_input = theta; % degrees
 
-    %% 2. Initial Guess %%
+    % 2. Initial Guess
     % Get an initial guess for the shock angle beta (assuming it's a wedge)
     % This provides a starting point for fzero
    
 
-    %% 3. Shooting Method (The Fix) %%
+    % 3. Shooting Method
     % fzero tries different beta values until the error is zero
     options = optimset('TolX', 1e-4); % Loosen the tolerance for performance
 
-    %beta_low = asind(1/M1)+0.1; % low-end guess
     beta_vals = linspace(asind(1/M1)+0.5, 75, 20);
     errors = zeros(size(beta_vals));
 
@@ -297,8 +314,24 @@ function outputbeta = coneBeta(Mach, theta, gamma)
 
 end % End of main function
 
-%% --- HELPER FUNCTIONS --- %%
+%% Taylor-Maccoll HELPER FUNCTIONS
 
+%%
+% *Find corresponding wedge θ for a given conical θ*
+% 
+% *Inputs:*
+%
+%
+% * Guess of conical oblique shock angle 'beta_guess' (degrees)
+% * Unperturbed Mach (M1)
+% * Ratio of specific heats, 'gamma' of flow, usually 1.4
+% * Given conical half-angle 'theta_target' (degrees)
+% 
+% *Outputs:*
+%
+% * Difference between the corresponding θ from the guessed  β, and the
+% target θ given. (=0 when the β guess is the correct conical oblique shock)
+%
 function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
 
     theta_rad = deg2rad(theta_target);
@@ -340,6 +373,20 @@ function error = solve_for_theta(beta_guess, M1, gamma, theta_target)
     end
 end
 
+%%
+% *Taylor-Mccoll equation itself*
+% 
+% *Inputs:*
+%
+%
+% * Cone half-angle 'theta' (degrees)
+% * Vector of velocity components [radial direction, angular direction] 'y'
+% * Ratio of specific heats, 'gamma' of flow, usually 1.4
+% 
+% *Outputs:*
+%
+% * Numeric derivatives of velocity in the r, θ direction.
+%
 function dydt = taylormaccoll(theta, y, gamma)
     Vr = y(1);
     Vt = y(2); 
