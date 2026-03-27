@@ -58,27 +58,43 @@ theta_c = linspace(theta_c_min, theta_c_max, num_points); % 'x' coord values
 % Each row: One M input
 % Each column: The values of theta_c (see above definitions)
 beta_outputs = zeros(num_curves, num_points);
+beta_wedge_outputs = NaN(num_curves, num_points);
 
+%max_betas = zeros(1, num_curves);
+%max_thetas = max_betas;
+
+
+%% Solving the System of Equations
+% Solves the system and logs the results.
+thetabounds = 50;
 % Finds the cone shock angles given the above-defined M, θ inputs.
 for i = 1:num_curves
-    
+    freestream_mach = M_inputs(i);
+
+    [max_thetas, max_betas] = maxWedgeBeta(freestream_mach,thetabounds,gamma);
+
     % For each row (M value), run the beta, point-by point.
     % HORRIBLY inefficient, but we just need it to work first.
     for j = 1:num_points
 
         % Grab the input
-        freestream_mach = M_inputs(i);
         cone_angle = theta_c(j);
 
         % Store the Output
         beta_outputs(i,j) = coneBeta(freestream_mach, cone_angle, gamma);
 
+        if cone_angle < max_thetas
+            beta_wedge_outputs(i,j) = beta(freestream_mach, cone_angle, gamma, 0);
+        else
+            beta_wedge_outputs(i,j) = NaN;  % <-- Gap instead of zero
+        end
+
+        
+
     end
 end
 
-
-%% Solving the System of Equations
-% Solves the system and logs the results.
+% Find the max beta and its angle
 
 %% Plotting
 % This is where all plots are generated.
@@ -102,17 +118,20 @@ if plot1
     colors = ['r', 'g', 'b']; % colors to cycle through
     for i = 1:num_curves
         % Make a custon name "M = X.XX" for each curve and store for the legend
-        name = "$M = " + sprintf("%.2f", M_inputs(i))+"$";
+        name = "$M = " + sprintf("%.2f", M_inputs(i))+"$ (cone case)";
+        name2 = "$M = " + sprintf("%.2f", M_inputs(i))+"$ (wedge)";
     
         % Grab the x 'θ' and y 'β' values
         x = theta_c; % Row vector of cone angles
-        y = beta_outputs(i,:); % Row vector of shock angles
+        y = beta_outputs(i,:); % Row vector of cone shock angles
+        y_wedge = beta_wedge_outputs(i,:); % Same but wedge
     
         % Cycle through the colors (however many colors are defined)
         color = colors(mod(i-1,length(colors))+1);
         
         % Plot the given curve, including the name (referenced in legend)
         plot(x, y, "LineWidth", lineWidth, "Color", color, DisplayName=name);
+        plot(x, y_wedge, "LineWidth", lineWidth-0.5, "Color", color, LineStyle = '--' , DisplayName=name2);
     end
     
     grid on;
@@ -121,6 +140,8 @@ if plot1
     legend(FontSize=legendFontSize,Location="northwest");
     xlabel("$\theta_{cone}$", fontsize = axisFontSize);
     ylabel("$\beta_{cone}$", FontSize = axisFontSize);
+    
+    ylim(ax1, [0, 90]);
     
     % Sets axes at origin.
     ax1.XAxisLocation = 'origin';
@@ -182,6 +203,9 @@ function Beta=beta(M,theta,gamma,n)
     b=((gamma+1)/2+(gamma+3)*c/2)*tan(theta);
     d=sqrt(4*(1-3*a*b)^3/((27*a^2*c+9*a*b-2)^2)-1);
     Beta=atan((b+9*a*c)/(2*(1-3*a*b))-(d*(27*a^2*c+9*a*b-2))/(6*a*(1-3*a*b))*tan(n*pi/3+1/3*atan(1/d)))*180/pi;
+
+
+
     %{
     Source:
     Based on an analytical solution to the theta-beta-Mach relation given in
@@ -192,6 +216,21 @@ function Beta=beta(M,theta,gamma,n)
     Original script by Chris Plumley, undergraduate, University of Maryland.
     %}
 end
+
+function [maxTheta, maxBeta] = maxWedgeBeta(M, thetabounds, gamma)
+
+t = @(b) deltaFinder(M, b, gamma);
+eps = 1e-7;
+
+dtdb = @(b) (t(b+eps) - t(b-eps))/(2*eps);
+
+% Use a guess for Beta, not Theta. 
+% 65 degrees is a safe starting point for most supersonic Mach numbers.
+maxBeta = fzero(dtdb, 65); 
+maxTheta = deltaFinder(M, maxBeta, gamma);
+
+end
+
 
 %%
 % *Find delta when given M and beta (degrees)*
