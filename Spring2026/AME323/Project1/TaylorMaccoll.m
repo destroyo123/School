@@ -110,15 +110,15 @@ if plot1
     ax1 = gca;
     
     % Text format
-    lineWidth = 1.25;
-    axisFontSize = 18;
-    legendFontSize = 14;
+    lineWidth = 1.5;
+    axisFontSize = 28;
+    legendFontSize = 16;
     hold on;
     
     colors = ['r', 'g', 'b']; % colors to cycle through
     for i = 1:num_curves
         % Make a custon name "M = X.XX" for each curve and store for the legend
-        name = "$M = " + sprintf("%.2f", M_inputs(i))+"$ (cone case)";
+        name = "$M = " + sprintf("%.2f", M_inputs(i))+"$ (cone)";
         name2 = "$M = " + sprintf("%.2f", M_inputs(i))+"$ (wedge)";
     
         % Grab the x 'θ' and y 'β' values
@@ -137,11 +137,12 @@ if plot1
     grid on;
     
     % Put the legend and axis labels
-    legend(FontSize=legendFontSize,Location="northwest");
-    xlabel("$\theta_{cone}$", fontsize = axisFontSize);
-    ylabel("$\beta_{cone}$", FontSize = axisFontSize);
-    
-    ylim(ax1, [0, 90]);
+    legend(FontSize=legendFontSize,Location="southeast");
+    xlabel("Half-angle, $\theta$", fontsize = axisFontSize);
+    ylabel("Oblique shock angle, $\beta$", FontSize = axisFontSize);
+
+    ylim(ax1, [0, 75]);
+    xlim(ax1, [0, 55]);
     
     % Sets axes at origin.
     ax1.XAxisLocation = 'origin';
